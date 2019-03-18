@@ -42,7 +42,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     NoteAdapter(@NonNull Context context, @NonNull List<Note> notes) {
         this.notes = notes;
         this.inflater = LayoutInflater.from(context);
-        this.noteClickHandler = (NoteClickHandler) context;
+        if (context instanceof NoteClickHandler) {
+            this.noteClickHandler = (NoteClickHandler) context;
+        } else {
+            throw new ClassCastException("Context must implement NoteClickHandler");
+        }
     }
 
     @Override
