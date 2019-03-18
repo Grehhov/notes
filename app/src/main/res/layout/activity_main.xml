@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/notes"
+        android:id="@+id/main_notes_recycler"
         app:layoutManager="LinearLayoutManager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,7 +14,7 @@
         android:layout_marginLeft="10dp"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/create_note_fab"
+        android:id="@+id/main_create_note_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"

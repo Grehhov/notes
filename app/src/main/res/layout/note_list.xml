@@ -8,12 +8,12 @@
     android:background="#DBDBDB">
 
     <TextView
-        android:id="@+id/name"
+        android:id="@+id/note_list_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"/>
     <TextView
-        android:id="@+id/description"
+        android:id="@+id/note_list_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

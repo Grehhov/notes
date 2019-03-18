@@ -24,30 +24,39 @@ public class NoteActivity extends AppCompatActivity {
 
         Bundle receivedBundle = getIntent().getExtras();
         if (receivedBundle != null) {
-            String name = receivedBundle.getString("name");
-            String description = receivedBundle.getString("description");
-            EditText nameEditView = (EditText)findViewById(R.id.name_edit_text);
-            EditText descriptionEditView = (EditText)findViewById(R.id.description_edit_text);
+            String name = receivedBundle.getString(MainActivity.NOTE_NAME);
+            String description = receivedBundle.getString(MainActivity.NOTE_DESCRIPTION);
+            EditText nameEditView = findViewById(R.id.note_name_edit_text);
+            EditText descriptionEditView = findViewById(R.id.note_description_edit_text);
             nameEditView.setText(name);
             descriptionEditView.setText(description);
-            indexNote = receivedBundle.getInt("index");
+            indexNote = receivedBundle.getInt(MainActivity.NOTE_INDEX);
         }
 
-        Button editNoteButton = (Button) findViewById(R.id.edit_note_button);
+        Button editNoteButton = findViewById(R.id.note_edit_button);
         editNoteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(@NonNull View view) {
-                Intent intent = new Intent();
-                Bundle bundle = new Bundle();
-                String name = ((TextView)findViewById(R.id.name_edit_text)).getText().toString();
-                String description = ((TextView)findViewById(R.id.description_edit_text)).getText().toString();
-                bundle.putString("name", name);
-                bundle.putString("description", description);
-                bundle.putInt("index", indexNote);
-                intent.putExtras(bundle);
-                setResult(RESULT_OK, intent);
-                finish();
+                onEditButtonClick();
             }
         });
+    }
+
+    /**
+     * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
+     */
+
+    void onEditButtonClick() {
+        Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        String name = ((TextView) findViewById(R.id.note_name_edit_text)).getText().toString();
+        String description = ((TextView) findViewById(R.id.note_description_edit_text))
+                .getText().toString();
+        bundle.putString(MainActivity.NOTE_NAME, name);
+        bundle.putString(MainActivity.NOTE_DESCRIPTION, description);
+        bundle.putInt(MainActivity.NOTE_INDEX, indexNote);
+        intent.putExtras(bundle);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }
