@@ -13,12 +13,13 @@ import java.util.List;
 /**
  * Связывает данные заметки с представлением
  */
-
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolder> {
-
-    private LayoutInflater inflater;
-    private List<Note> notes;
-    private NoteClickHandler noteClickHandler;
+    @NonNull
+    private final LayoutInflater inflater;
+    @NonNull
+    private final NoteClickHandler noteClickHandler;
+    @NonNull
+    private final List<Note> notes;
 
     public static class NotesViewHolder extends RecyclerView.ViewHolder {
         final TextView nameView;
@@ -34,7 +35,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     /**
      * Обрабатывает нажатие по заметке из списка
      */
-
     public interface NoteClickHandler {
         void onItemClick(@NonNull Note note, int position);
     }

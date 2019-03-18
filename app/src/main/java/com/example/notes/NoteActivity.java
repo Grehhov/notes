@@ -13,7 +13,6 @@ import android.widget.TextView;
 /**
  * Управляет окном добавления/редактирования заметки
  */
-
 public class NoteActivity extends AppCompatActivity {
     int indexNote;
 
@@ -45,7 +44,6 @@ public class NoteActivity extends AppCompatActivity {
     /**
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
-
     void onEditButtonClick() {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();

@@ -17,12 +17,12 @@ import java.util.List;
 /**
  * Управляет окном со списком заметок
  */
-
 public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteClickHandler {
 
     public static final String NOTE_NAME = "name";
     public static final String NOTE_DESCRIPTION = "description";
     public static final String NOTE_INDEX = "index";
+    public static final String NOTE_LIST = "notes";
     private static final int CREATE_NOTE_REQUEST = 1;
     private static final int EDIT_NOTE_REQUEST = 2;
     private List<Note> notes = new ArrayList<>();
@@ -33,9 +33,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState != null)
-        {
-            notes = savedInstanceState.getParcelableArrayList("notes");
+        if (savedInstanceState != null) {
+            notes = savedInstanceState.getParcelableArrayList(NOTE_LIST);
         }
         RecyclerView recyclerViewNotes = findViewById(R.id.main_notes_recycler);
         noteAdapter = new NoteAdapter(this, notes);
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("notes", (ArrayList<? extends Parcelable>) notes);
+        outState.putParcelableArrayList(NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
     }
 
     @Override
