@@ -19,12 +19,13 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteClickHandler {
 
-    public static final String NOTE_NAME = "name";
-    public static final String NOTE_DESCRIPTION = "description";
-    public static final String NOTE_INDEX = "index";
-    public static final String NOTE_LIST = "notes";
+    public static final String BUNDLE_NOTE_NAME = "name";
+    public static final String BUNDLE_NOTE_DESCRIPTION = "description";
+    public static final String BUNDLE_NOTE_INDEX = "index";
+    public static final String STATE_NOTE_LIST = "notes";
     private static final int CREATE_NOTE_REQUEST = 1;
     private static final int EDIT_NOTE_REQUEST = 2;
+    @NonNull
     private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
 
@@ -34,7 +35,10 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState != null) {
-            notes = savedInstanceState.getParcelableArrayList(NOTE_LIST);
+            List<Note> noteList = savedInstanceState.getParcelableArrayList(STATE_NOTE_LIST);
+            if (noteList != null) {
+                notes = noteList;
+            }
         }
         RecyclerView recyclerViewNotes = findViewById(R.id.main_notes_recycler);
         noteAdapter = new NoteAdapter(this, notes);
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
+        outState.putParcelableArrayList(STATE_NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
     }
 
     @Override
@@ -65,17 +69,17 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
         if (bundle == null) {
             return;
         }
-        String noteName = bundle.getString(NOTE_NAME);
+        String noteName = bundle.getString(BUNDLE_NOTE_NAME);
         if (TextUtils.isEmpty(noteName)) {
             return;
         }
-        Note note = new Note(noteName, bundle.getString(NOTE_DESCRIPTION));
+        Note note = new Note(noteName, bundle.getString(BUNDLE_NOTE_DESCRIPTION));
         switch (requestCode) {
             case CREATE_NOTE_REQUEST:
                 notes.add(note);
                 break;
             case EDIT_NOTE_REQUEST:
-                int index = bundle.getInt(NOTE_INDEX);
+                int index = bundle.getInt(BUNDLE_NOTE_INDEX);
                 notes.set(index, note);
                 break;
         }
@@ -85,9 +89,9 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.NoteC
     public void onItemClick(@NonNull Note note, int position) {
         Intent intent = new Intent(this, NoteActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString(NOTE_NAME, note.getName());
-        bundle.putString(NOTE_DESCRIPTION, note.getDescription());
-        bundle.putInt(NOTE_INDEX, position);
+        bundle.putString(BUNDLE_NOTE_NAME, note.getName());
+        bundle.putString(BUNDLE_NOTE_DESCRIPTION, note.getDescription());
+        bundle.putInt(BUNDLE_NOTE_INDEX, position);
         intent.putExtras(bundle);
         startActivityForResult(intent, EDIT_NOTE_REQUEST);
     }

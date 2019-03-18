@@ -22,7 +22,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     private final List<Note> notes;
 
     public static class NotesViewHolder extends RecyclerView.ViewHolder {
+        @NonNull
         final TextView nameView;
+        @NonNull
         final TextView descriptionView;
 
         public NotesViewHolder (@NonNull View itemView) {

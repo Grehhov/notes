@@ -23,13 +23,13 @@ public class NoteActivity extends AppCompatActivity {
 
         Bundle receivedBundle = getIntent().getExtras();
         if (receivedBundle != null) {
-            String name = receivedBundle.getString(MainActivity.NOTE_NAME);
-            String description = receivedBundle.getString(MainActivity.NOTE_DESCRIPTION);
+            String name = receivedBundle.getString(MainActivity.BUNDLE_NOTE_NAME);
+            String description = receivedBundle.getString(MainActivity.BUNDLE_NOTE_DESCRIPTION);
             EditText nameEditView = findViewById(R.id.note_name_edit_text);
             EditText descriptionEditView = findViewById(R.id.note_description_edit_text);
             nameEditView.setText(name);
             descriptionEditView.setText(description);
-            indexNote = receivedBundle.getInt(MainActivity.NOTE_INDEX);
+            indexNote = receivedBundle.getInt(MainActivity.BUNDLE_NOTE_INDEX);
         }
 
         Button editNoteButton = findViewById(R.id.note_edit_button);
@@ -50,9 +50,9 @@ public class NoteActivity extends AppCompatActivity {
         String name = ((TextView) findViewById(R.id.note_name_edit_text)).getText().toString();
         String description = ((TextView) findViewById(R.id.note_description_edit_text))
                 .getText().toString();
-        bundle.putString(MainActivity.NOTE_NAME, name);
-        bundle.putString(MainActivity.NOTE_DESCRIPTION, description);
-        bundle.putInt(MainActivity.NOTE_INDEX, indexNote);
+        bundle.putString(MainActivity.BUNDLE_NOTE_NAME, name);
+        bundle.putString(MainActivity.BUNDLE_NOTE_DESCRIPTION, description);
+        bundle.putInt(MainActivity.BUNDLE_NOTE_INDEX, indexNote);
         intent.putExtras(bundle);
         setResult(RESULT_OK, intent);
         finish();
