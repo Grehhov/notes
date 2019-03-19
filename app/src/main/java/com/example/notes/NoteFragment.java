@@ -1,12 +1,10 @@
 package com.example.notes;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,11 +25,6 @@ public class NoteFragment extends Fragment {
     @Nullable
     private String description;
     private int indexNote;
-    private AppCompatActivity mainActivity;
-
-    public NoteFragment() {
-
-    }
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -47,12 +40,6 @@ public class NoteFragment extends Fragment {
         args.putInt(MainActivity.BUNDLE_NOTE_INDEX, indexNote);
         fragment.setArguments(args);
         return fragment;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mainActivity = (AppCompatActivity) context;
     }
 
     @Override
@@ -85,12 +72,6 @@ public class NoteFragment extends Fragment {
         return rootView;
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mainActivity = null;
-    }
-
     /**
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
@@ -108,6 +89,6 @@ public class NoteFragment extends Fragment {
         if (targetFragment != null) {
             targetFragment.onActivityResult(getTargetRequestCode(), RESULT_OK, intent);
         }
-        mainActivity.onBackPressed();
+        requireActivity().onBackPressed();
     }
 }

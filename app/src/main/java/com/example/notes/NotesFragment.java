@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -25,15 +24,17 @@ import java.util.List;
 public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHandler {
 
     private static final String STATE_NOTE_LIST = "notes";
-    private static final int CREATE_NOTE_REQUEST = 1;
-    private static final int EDIT_NOTE_REQUEST = 2;
     @NonNull
     private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
-    private AppCompatActivity mainActivity;
+    private NavigationClickHandler navigationClickHandler;
 
-    public NotesFragment() {
-
+    /**
+     * Обрабатывает нажатия во фрагменте
+     */
+    public interface NavigationClickHandler {
+        void onCreateButtonClick(@NonNull Fragment targetFragment);
+        void onItemClick(@NonNull Fragment targetFragment, @NonNull Note note, int position);
     }
 
     @NonNull
@@ -44,7 +45,11 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mainActivity = (AppCompatActivity) context;
+        if (context instanceof NavigationClickHandler) {
+            navigationClickHandler = (NavigationClickHandler) context;
+        } else {
+            throw new IllegalStateException("Context must implement NavigationClickHandler");
+        }
     }
 
     @Override
@@ -57,7 +62,7 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
                 notes = noteList;
             }
         }
-        noteAdapter = new NoteAdapter(mainActivity, notes, this);
+        noteAdapter = new NoteAdapter(requireActivity(), notes, this);
     }
 
     @Override
@@ -74,16 +79,7 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
         createNoteFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(@NonNull View view) {
-                NoteFragment noteFragment = NoteFragment.newInstance();
-                noteFragment.setTargetFragment(targetFragment, CREATE_NOTE_REQUEST);
-                mainActivity
-                        .getSupportFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(R.animator.slide_enter, R.animator.slide_exit,
-                                R.animator.slide_pop_enter, 0)
-                        .replace(R.id.main_fragment_container, noteFragment)
-                        .addToBackStack(null)
-                        .commit();
+                navigationClickHandler.onCreateButtonClick(targetFragment);
             }
         });
 
@@ -111,10 +107,10 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
         }
         Note note = new Note(noteName, bundle.getString(MainActivity.BUNDLE_NOTE_DESCRIPTION));
         switch (requestCode) {
-            case CREATE_NOTE_REQUEST:
+            case MainActivity.CREATE_NOTE_REQUEST:
                 notes.add(note);
                 break;
-            case EDIT_NOTE_REQUEST:
+            case MainActivity.EDIT_NOTE_REQUEST:
                 int index = bundle.getInt(MainActivity.BUNDLE_NOTE_INDEX);
                 notes.set(index, note);
                 break;
@@ -125,19 +121,10 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
     @Override
     public void onDetach() {
         super.onDetach();
-        mainActivity = null;
+        navigationClickHandler = null;
     }
 
     public void onItemClick(@NonNull Note note, int position) {
-        NoteFragment noteFragment = NoteFragment.newInstance(note, position);
-        noteFragment.setTargetFragment(this, EDIT_NOTE_REQUEST);
-        mainActivity
-                .getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(R.animator.slide_enter, R.animator.slide_exit,
-                        R.animator.slide_pop_enter, 0)
-                .replace(R.id.main_fragment_container, noteFragment)
-                .addToBackStack(null)
-                .commit();
+        navigationClickHandler.onItemClick(this, note, position);
     }
 }
