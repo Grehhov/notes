@@ -14,6 +14,7 @@ import java.util.List;
  * Связывает данные заметки с представлением
  */
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolder> {
+
     @NonNull
     private final LayoutInflater inflater;
     @NonNull
@@ -21,13 +22,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     @NonNull
     private final List<Note> notes;
 
-    public static class NotesViewHolder extends RecyclerView.ViewHolder {
+    static class NotesViewHolder extends RecyclerView.ViewHolder {
         @NonNull
         final TextView nameView;
         @NonNull
         final TextView descriptionView;
 
-        public NotesViewHolder (@NonNull View itemView) {
+        NotesViewHolder (@NonNull View itemView) {
             super(itemView);
             nameView = itemView.findViewById(R.id.note_list_name);
             descriptionView = itemView.findViewById(R.id.note_list_description);
@@ -41,14 +42,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         void onItemClick(@NonNull Note note, int position);
     }
 
-    NoteAdapter(@NonNull Context context, @NonNull List<Note> notes) {
+    NoteAdapter(@NonNull Context context, @NonNull List<Note> notes,
+                @NonNull NoteClickHandler noteClickHandler) {
         this.notes = notes;
         this.inflater = LayoutInflater.from(context);
-        if (context instanceof NoteClickHandler) {
-            this.noteClickHandler = (NoteClickHandler) context;
-        } else {
-            throw new ClassCastException("Context must implement NoteClickHandler");
-        }
+        this.noteClickHandler = noteClickHandler;
     }
 
     @Override
