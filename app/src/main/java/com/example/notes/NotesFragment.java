@@ -21,9 +21,11 @@ import java.util.List;
 /**
  * Управляет окном списка заметок
  */
-public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHandler {
+public class NotesFragment extends Fragment
+        implements NoteAdapter.NoteClickHandler, BottomSheetFragment.ListActionHandler {
 
     private static final String STATE_NOTE_LIST = "notes";
+    private static final int SIZE_DIVIDER_NOTE_LIST = 10;
     @NonNull
     private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
@@ -43,7 +45,7 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof NavigationClickHandler) {
             navigationClickHandler = (NavigationClickHandler) context;
@@ -61,6 +63,12 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
             if (noteList != null) {
                 notes = noteList;
             }
+        } else {
+            BottomSheetFragment bottomSheetFragment = BottomSheetFragment.newInstance();
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.notes_fragment_container, bottomSheetFragment)
+                    .commit();
         }
         noteAdapter = new NoteAdapter(requireActivity(), notes, this);
     }
@@ -73,6 +81,8 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
 
         RecyclerView recyclerViewNotes = rootView.findViewById(R.id.notes_recycler);
         recyclerViewNotes.setAdapter(noteAdapter);
+        recyclerViewNotes.addItemDecoration(new NotesItemDecoration(
+                (int)(SIZE_DIVIDER_NOTE_LIST * getResources().getDisplayMetrics().density)));
 
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
@@ -105,14 +115,15 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
         if (TextUtils.isEmpty(noteName)) {
             return;
         }
-        Note note = new Note(noteName, bundle.getString(MainActivity.BUNDLE_NOTE_DESCRIPTION));
+        String noteDescription = bundle.getString(MainActivity.BUNDLE_NOTE_DESCRIPTION);
         switch (requestCode) {
             case MainActivity.CREATE_NOTE_REQUEST:
-                notes.add(note);
+                notes.add(new Note(noteName, noteDescription));
                 break;
             case MainActivity.EDIT_NOTE_REQUEST:
                 int index = bundle.getInt(MainActivity.BUNDLE_NOTE_INDEX);
-                notes.set(index, note);
+                notes.get(index).setDescription(noteName);
+                notes.get(index).setDescription(noteDescription);
                 break;
         }
         noteAdapter.notifyDataSetChanged();
@@ -126,5 +137,17 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
 
     public void onItemClick(@NonNull Note note, int position) {
         navigationClickHandler.onItemClick(this, note, position);
+    }
+
+    public void filter(@NonNull String query) {
+        noteAdapter.getFilter().filter(query);
+    }
+
+    public void sortByAddDate(boolean isAscending) {
+        noteAdapter.sortByAddDate(isAscending);
+    }
+
+    public void sortByLastUpdate(boolean isAscending) {
+        noteAdapter.sortByLastUpdate(isAscending);
     }
 }

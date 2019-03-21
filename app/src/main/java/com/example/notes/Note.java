@@ -5,6 +5,8 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.Date;
+
 /**
  * Представляет собой основные поля заметки
  */
@@ -13,17 +15,23 @@ public class Note implements Parcelable {
     private String name;
     @Nullable
     private String description;
+    @NonNull
+    private Date addDate;
+    @NonNull
+    private Date lastUpdate;
 
     public Note(@NonNull String name, @Nullable String description) {
         this.name = name;
         this.description = description;
+        this.addDate = new Date();
+        this.lastUpdate = new Date();
     }
 
     public Note(@NonNull Parcel in) {
-        String[] data = new String[2];
-        in.readStringArray(data);
-        name = data[0];
-        description = data[1];
+        name = in.readString();
+        description = in.readString();
+        addDate = new Date(in.readLong());
+        lastUpdate = new Date(in.readLong());
     }
 
     @NonNull
@@ -36,12 +44,24 @@ public class Note implements Parcelable {
         return description;
     }
 
+    @NonNull
+    public Date getAddDate() {
+        return addDate;
+    }
+
+    @NonNull
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+
     public void setName(@NonNull String name) {
         this.name = name;
+        this.lastUpdate = new Date();
     }
 
     public void setDescription(@Nullable String description) {
         this.description = description;
+        this.lastUpdate = new Date();
     }
 
     @Override
@@ -51,7 +71,10 @@ public class Note implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeStringArray(new String[] { name, description });
+        dest.writeString(name);
+        dest.writeString(description);
+        dest.writeLong(addDate.getTime());
+        dest.writeLong(lastUpdate.getTime());
     }
 
     @NonNull
