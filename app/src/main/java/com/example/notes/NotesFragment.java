@@ -15,7 +15,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SearchView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +27,13 @@ public class NotesFragment extends Fragment
         implements NoteAdapter.NoteClickHandler, OptionsFragment.ListActionHandler {
 
     private static final String STATE_NOTE_LIST = "notes";
+    private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "bottom_sheet_behavior";
     @NonNull
     private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
+    private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
 
     /**
      * Обрабатывает нажатия во фрагменте
@@ -62,6 +63,7 @@ public class NotesFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
+            stateBottomSheetBehavior = savedInstanceState.getInt(STATE_BOTTOM_SHEET_BEHAVIOR);
             List<Note> noteList = savedInstanceState.getParcelableArrayList(STATE_NOTE_LIST);
             if (noteList != null) {
                 notes = noteList;
@@ -87,6 +89,11 @@ public class NotesFragment extends Fragment
         recyclerViewNotes.addItemDecoration(new NotesItemDecoration(
                 getResources().getDimensionPixelSize(R.dimen.size_divider_note_list)));
 
+        View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
+        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
+        bottomSheetBehavior.setState(stateBottomSheetBehavior);
+
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
         createNoteFab.setOnClickListener(new View.OnClickListener() {
@@ -102,21 +109,18 @@ public class NotesFragment extends Fragment
     @Override
     public void onStart(){
         super.onStart();
-        Fragment fragment = getChildFragmentManager().findFragmentById(R.id.notes_fragment_options_container);
-        View bottomSheet = fragment.getView().findViewById(R.id.fragment_options);
-        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback());
         if (needCleanSearch) {
-            SearchView searchView = bottomSheet.findViewById(R.id.options_search);
-            searchView.setQuery("", false);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            OptionsFragment optionsFragment = (OptionsFragment) getChildFragmentManager()
+                    .findFragmentById(R.id.notes_fragment_options_container);
+            optionsFragment.clearQuery();
+
+            getBottomSheetBehavior().setState(BottomSheetBehavior.STATE_COLLAPSED);
             needCleanSearch = false;
         }
     }
 
     @NonNull
-    BottomSheetBehavior.BottomSheetCallback getBottomSheetCallback() {
-        final RecyclerView recyclerViewNotes = getView().findViewById(R.id.notes_recycler);
+    BottomSheetBehavior.BottomSheetCallback getBottomSheetCallback(final RecyclerView recyclerViewNotes) {
         return new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -133,8 +137,15 @@ public class NotesFragment extends Fragment
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        stateBottomSheetBehavior = getBottomSheetBehavior().getState();
+    }
+
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, getBottomSheetBehavior().getState());
         outState.putParcelableArrayList(STATE_NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
     }
 
@@ -170,6 +181,15 @@ public class NotesFragment extends Fragment
     public void onDetach() {
         super.onDetach();
         navigationClickHandler = null;
+    }
+
+    @Nullable
+    private BottomSheetBehavior getBottomSheetBehavior() {
+        if (getView() == null) {
+            return null;
+        }
+        View bottomSheet = getView().findViewById(R.id.notes_fragment_options_container);
+        return BottomSheetBehavior.from(bottomSheet);
     }
 
     public void onItemClick(@NonNull Note note, int position) {

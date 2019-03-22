@@ -3,9 +3,7 @@ package com.example.notes;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,5 +104,10 @@ public class OptionsFragment extends Fragment {
             str = str.substring(0, str.length() - 1);
         }
         return str + arrow;
+    }
+
+    public void clearQuery() {
+        SearchView searchView = getView().findViewById(R.id.options_search);
+        searchView.setQuery("", false);
     }
 }
