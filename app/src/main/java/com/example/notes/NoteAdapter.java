@@ -23,6 +23,8 @@ import java.util.Locale;
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolder> implements Filterable {
 
     @NonNull
+    private SimpleDateFormat formatForDateNow = new SimpleDateFormat("hh:mm dd.MM.yyyy", Locale.getDefault());
+    @NonNull
     private final LayoutInflater inflater;
     @NonNull
     private final NoteClickHandler noteClickHandler;
@@ -73,7 +75,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         final Note note = visibleNotes.get(position);
         holder.nameView.setText(note.getName());
         holder.descriptionView.setText(note.getDescription());
-        SimpleDateFormat formatForDateNow = new SimpleDateFormat("hh:mm dd.MM.yyyy", Locale.ROOT);
         holder.lastUpdateView.setText(formatForDateNow.format(note.getLastUpdate()));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

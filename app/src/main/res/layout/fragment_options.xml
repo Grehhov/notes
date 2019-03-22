@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/fragment_bottom_sheet"
+    android:id="@+id/fragment_options"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#DBDBDB"
@@ -19,7 +19,7 @@
         android:textColor="@android:color/white" />
 
     <SearchView
-        android:id="@+id/bottom_sheet_search"
+        android:id="@+id/options_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:iconifiedByDefault="false"/>
@@ -29,14 +29,14 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <Button
-            android:id="@+id/bottom_sheet_button_sort_add"
+            android:id="@+id/options_button_sort_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/bottom_sheet_sort_add"
             style="@style/Widget.AppCompat.Button.Borderless.Colored"/>
         <Button
-            android:id="@+id/bottom_sheet_button_sort_update"
+            android:id="@+id/options_button_sort_update"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

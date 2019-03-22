@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +15,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SearchView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,14 +25,14 @@ import java.util.List;
  * Управляет окном списка заметок
  */
 public class NotesFragment extends Fragment
-        implements NoteAdapter.NoteClickHandler, BottomSheetFragment.ListActionHandler {
+        implements NoteAdapter.NoteClickHandler, OptionsFragment.ListActionHandler {
 
     private static final String STATE_NOTE_LIST = "notes";
-    private static final int SIZE_DIVIDER_NOTE_LIST = 10;
     @NonNull
     private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
     private NavigationClickHandler navigationClickHandler;
+    private boolean needCleanSearch;
 
     /**
      * Обрабатывает нажатия во фрагменте
@@ -64,10 +67,10 @@ public class NotesFragment extends Fragment
                 notes = noteList;
             }
         } else {
-            BottomSheetFragment bottomSheetFragment = BottomSheetFragment.newInstance();
+            OptionsFragment optionsFragment = OptionsFragment.newInstance();
             getChildFragmentManager()
                     .beginTransaction()
-                    .add(R.id.notes_fragment_container, bottomSheetFragment)
+                    .add(R.id.notes_fragment_options_container, optionsFragment)
                     .commit();
         }
         noteAdapter = new NoteAdapter(requireActivity(), notes, this);
@@ -82,7 +85,7 @@ public class NotesFragment extends Fragment
         RecyclerView recyclerViewNotes = rootView.findViewById(R.id.notes_recycler);
         recyclerViewNotes.setAdapter(noteAdapter);
         recyclerViewNotes.addItemDecoration(new NotesItemDecoration(
-                (int)(SIZE_DIVIDER_NOTE_LIST * getResources().getDisplayMetrics().density)));
+                getResources().getDimensionPixelSize(R.dimen.size_divider_note_list)));
 
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
@@ -94,6 +97,39 @@ public class NotesFragment extends Fragment
         });
 
         return rootView;
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        Fragment fragment = getChildFragmentManager().findFragmentById(R.id.notes_fragment_options_container);
+        View bottomSheet = fragment.getView().findViewById(R.id.fragment_options);
+        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback());
+        if (needCleanSearch) {
+            SearchView searchView = bottomSheet.findViewById(R.id.options_search);
+            searchView.setQuery("", false);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            needCleanSearch = false;
+        }
+    }
+
+    @NonNull
+    BottomSheetBehavior.BottomSheetCallback getBottomSheetCallback() {
+        final RecyclerView recyclerViewNotes = getView().findViewById(R.id.notes_recycler);
+        return new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                CoordinatorLayout.LayoutParams layoutParams =
+                        (CoordinatorLayout.LayoutParams) recyclerViewNotes.getLayoutParams();
+                layoutParams.height = bottomSheet.getTop();
+                recyclerViewNotes.setLayoutParams(layoutParams);
+            }
+        };
     }
 
     @Override
@@ -126,6 +162,7 @@ public class NotesFragment extends Fragment
                 notes.get(index).setDescription(noteDescription);
                 break;
         }
+        needCleanSearch = true;
         noteAdapter.notifyDataSetChanged();
     }
 

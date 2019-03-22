@@ -4,9 +4,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +15,7 @@ import android.widget.SearchView;
 /**
  * Управляет нижним окном фильтра и сортировки
  */
-public class BottomSheetFragment extends Fragment {
+public class OptionsFragment extends Fragment {
     private boolean isAscendingAddDate;
     private boolean isAscendingLastUpdate;
     private ListActionHandler listActionHandler;
@@ -31,14 +30,13 @@ public class BottomSheetFragment extends Fragment {
     }
 
     @NonNull
-    public static BottomSheetFragment newInstance() {
-        return new BottomSheetFragment();
+    public static OptionsFragment newInstance() {
+        return new OptionsFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (getParentFragment() instanceof ListActionHandler) {
             listActionHandler = (ListActionHandler) getParentFragment();
         } else {
@@ -50,45 +48,24 @@ public class BottomSheetFragment extends Fragment {
     @NonNull
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_bottom_sheet, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_options, container, false);
 
-        View bottomSheet = rootView.findViewById(R.id.fragment_bottom_sheet);
-        BottomSheetBehavior behavior = BottomSheetBehavior.from(bottomSheet);
-        behavior.setBottomSheetCallback(getBottomSheetCallback());
+        SearchView searchView = rootView.findViewById(R.id.options_search);
+        searchView.setOnQueryTextListener(getQueryTextListener());
 
-        SearchView searchView = rootView.findViewById(R.id.bottom_sheet_search);
-        searchView.setOnQueryTextListener(getQueryTextListener(searchView));
-
-        Button buttonSortAdd = rootView.findViewById(R.id.bottom_sheet_button_sort_add);
-        Button buttonSortUpdate = rootView.findViewById(R.id.bottom_sheet_button_sort_update);
+        Button buttonSortAdd = rootView.findViewById(R.id.options_button_sort_add);
+        Button buttonSortUpdate = rootView.findViewById(R.id.options_button_sort_update);
         buttonSortAdd.setOnClickListener(getSortButtonClickListener(buttonSortAdd, buttonSortUpdate, true));
         buttonSortUpdate.setOnClickListener(getSortButtonClickListener(buttonSortUpdate, buttonSortAdd, false));
 
         return rootView;
     }
 
-    BottomSheetBehavior.BottomSheetCallback getBottomSheetCallback() {
-        final RecyclerView recyclerViewNotes = getParentFragment().getView().findViewById(R.id.notes_recycler);
-        return new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                CoordinatorLayout.LayoutParams layoutParams =
-                        (CoordinatorLayout.LayoutParams) recyclerViewNotes.getLayoutParams();
-                layoutParams.height = bottomSheet.getTop();
-                recyclerViewNotes.setLayoutParams(layoutParams);
-            }
-        };
-    }
-
-    SearchView.OnQueryTextListener getQueryTextListener(@NonNull final SearchView searchView) {
+    @NonNull
+    SearchView.OnQueryTextListener getQueryTextListener() {
         return new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(@NonNull String query) {
-                //searchView.clearFocus();
                 return false;
             }
 
@@ -100,6 +77,7 @@ public class BottomSheetFragment extends Fragment {
         };
     }
 
+    @NonNull
     View.OnClickListener getSortButtonClickListener(@NonNull final Button button, @NonNull final Button otherButton,
                                                     final boolean isButtonAddDate) {
         return new View.OnClickListener() {
@@ -123,19 +101,10 @@ public class BottomSheetFragment extends Fragment {
 
     @NonNull
     private String changeArrow(@NonNull String str, @NonNull String arrow) {
-        if (str.charAt(str.length() - 1) == '↓' || str.charAt(str.length() - 1) == '↑') {
+        char lastChar = str.charAt(str.length() - 1);
+        if (lastChar == '↓' || lastChar == '↑') {
             str = str.substring(0, str.length() - 1);
         }
         return str + arrow;
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        View bottomSheet = getView();
-        SearchView searchView = bottomSheet.findViewById(R.id.bottom_sheet_search);
-        searchView.setQuery("", false);
-        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 }
