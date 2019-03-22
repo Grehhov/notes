@@ -12,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,13 @@ import java.util.List;
  */
 public class NotesFragment extends Fragment
         implements NoteAdapter.NoteClickHandler, OptionsFragment.ListActionHandler {
+    /**
+     * Обрабатывает нажатия во фрагменте
+     */
+    public interface NavigationClickHandler {
+        void onCreateButtonClick(@NonNull Fragment targetFragment);
+        void onItemClick(@NonNull Fragment targetFragment, @NonNull Note note, int position);
+    }
 
     private static final String STATE_NOTE_LIST = "notes";
     private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "bottom_sheet_behavior";
@@ -33,15 +41,9 @@ public class NotesFragment extends Fragment
     private NoteAdapter noteAdapter;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
+    @Nullable
+    private BottomSheetBehavior bottomSheetBehavior;
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
-
-    /**
-     * Обрабатывает нажатия во фрагменте
-     */
-    public interface NavigationClickHandler {
-        void onCreateButtonClick(@NonNull Fragment targetFragment);
-        void onItemClick(@NonNull Fragment targetFragment, @NonNull Note note, int position);
-    }
 
     @NonNull
     public static NotesFragment newInstance() {
@@ -90,9 +92,11 @@ public class NotesFragment extends Fragment
                 getResources().getDimensionPixelSize(R.dimen.size_divider_note_list)));
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
-        BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
-        bottomSheetBehavior.setState(stateBottomSheetBehavior);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        if (bottomSheetBehavior != null) {
+            bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
+            bottomSheetBehavior.setState(stateBottomSheetBehavior);
+        }
 
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
@@ -112,9 +116,12 @@ public class NotesFragment extends Fragment
         if (needCleanSearch) {
             OptionsFragment optionsFragment = (OptionsFragment) getChildFragmentManager()
                     .findFragmentById(R.id.notes_fragment_options_container);
-            optionsFragment.clearQuery();
-
-            getBottomSheetBehavior().setState(BottomSheetBehavior.STATE_COLLAPSED);
+            if (optionsFragment != null) {
+                optionsFragment.clearQuery();
+            }
+            if (bottomSheetBehavior != null) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
             needCleanSearch = false;
         }
     }
@@ -137,15 +144,11 @@ public class NotesFragment extends Fragment
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        stateBottomSheetBehavior = getBottomSheetBehavior().getState();
-    }
-
-    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, getBottomSheetBehavior().getState());
+        if (bottomSheetBehavior != null) {
+            outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
+        }
         outState.putParcelableArrayList(STATE_NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
     }
 
@@ -178,18 +181,17 @@ public class NotesFragment extends Fragment
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (bottomSheetBehavior != null) {
+            stateBottomSheetBehavior = bottomSheetBehavior.getState();
+        }
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         navigationClickHandler = null;
-    }
-
-    @Nullable
-    private BottomSheetBehavior getBottomSheetBehavior() {
-        if (getView() == null) {
-            return null;
-        }
-        View bottomSheet = getView().findViewById(R.id.notes_fragment_options_container);
-        return BottomSheetBehavior.from(bottomSheet);
     }
 
     public void onItemClick(@NonNull Note note, int position) {

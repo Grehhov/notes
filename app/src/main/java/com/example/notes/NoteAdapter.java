@@ -21,6 +21,12 @@ import java.util.Locale;
  * Связывает данные заметки с представлением
  */
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolder> implements Filterable {
+    /**
+     * Обрабатывает нажатие по заметке из списка
+     */
+    public interface NoteClickHandler {
+        void onItemClick(@NonNull Note note, int position);
+    }
 
     @NonNull
     private SimpleDateFormat formatForDateNow = new SimpleDateFormat("hh:mm dd.MM.yyyy", Locale.getDefault());
@@ -49,13 +55,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         }
     }
 
-    /**
-     * Обрабатывает нажатие по заметке из списка
-     */
-    public interface NoteClickHandler {
-        void onItemClick(@NonNull Note note, int position);
-    }
-
     NoteAdapter(@NonNull Context context, @NonNull List<Note> notes, @NonNull NoteClickHandler noteClickHandler) {
         this.notes = notes;
         this.visibleNotes = notes;
@@ -71,7 +70,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NotesViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final NotesViewHolder holder, int position) {
         final Note note = visibleNotes.get(position);
         holder.nameView.setText(note.getName());
         holder.descriptionView.setText(note.getDescription());
@@ -79,7 +78,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(@NonNull View view) {
-                noteClickHandler.onItemClick(note, position);
+                noteClickHandler.onItemClick(note, holder.getAdapterPosition());
             }
         });
     }
@@ -116,6 +115,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
             }
 
             @Override
+            @SuppressWarnings("unchecked")
             protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
                 visibleNotes = (ArrayList<Note>) filterResults.values;
                 notifyDataSetChanged();
@@ -127,7 +127,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
      * Сортирует список заметок по дате добавления
      * @param isAscending - по возрастания/убыванию
      */
-    public void sortByAddDate(final boolean isAscending) {
+    void sortByAddDate(final boolean isAscending) {
         Collections.sort(visibleNotes, new Comparator<Note>() {
             @Override
             public int compare(@NonNull Note a, @NonNull Note b) {
@@ -142,7 +142,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
      * Сортирует список заметок по дате последнего обновления
      * @param isAscending - по возрастания/убыванию
      */
-    public void sortByLastUpdate(final boolean isAscending) {
+    void sortByLastUpdate(final boolean isAscending) {
         Collections.sort(visibleNotes, new Comparator<Note>() {
             @Override
             public int compare(@NonNull Note a, @NonNull Note b) {

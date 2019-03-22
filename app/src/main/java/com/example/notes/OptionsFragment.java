@@ -14,10 +14,6 @@ import android.widget.SearchView;
  * Управляет нижним окном фильтра и сортировки
  */
 public class OptionsFragment extends Fragment {
-    private boolean isAscendingAddDate;
-    private boolean isAscendingLastUpdate;
-    private ListActionHandler listActionHandler;
-
     /**
      * Обрабатывает нажатие по заметке из списка
      */
@@ -26,6 +22,12 @@ public class OptionsFragment extends Fragment {
         void sortByAddDate(boolean isAscending);
         void sortByLastUpdate(boolean isAscending);
     }
+
+    private boolean isAscendingAddDate;
+    private boolean isAscendingLastUpdate;
+    private ListActionHandler listActionHandler;
+    @Nullable
+    private SearchView searchView;
 
     @NonNull
     public static OptionsFragment newInstance() {
@@ -48,8 +50,10 @@ public class OptionsFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_options, container, false);
 
-        SearchView searchView = rootView.findViewById(R.id.options_search);
-        searchView.setOnQueryTextListener(getQueryTextListener());
+        searchView = rootView.findViewById(R.id.options_search);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(getQueryTextListener());
+        }
 
         Button buttonSortAdd = rootView.findViewById(R.id.options_button_sort_add);
         Button buttonSortUpdate = rootView.findViewById(R.id.options_button_sort_update);
@@ -107,7 +111,8 @@ public class OptionsFragment extends Fragment {
     }
 
     public void clearQuery() {
-        SearchView searchView = getView().findViewById(R.id.options_search);
-        searchView.setQuery("", false);
+        if (searchView != null) {
+            searchView.setQuery("", false);
+        }
     }
 }
