@@ -1,5 +1,6 @@
 package com.example.notes;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,20 +15,12 @@ import android.widget.SearchView;
  * Управляет нижним окном фильтра и сортировки
  */
 public class OptionsFragment extends Fragment {
-    /**
-     * Обрабатывает нажатие по заметке из списка
-     */
-    public interface ListActionHandler {
-        void filter(@NonNull String query);
-        void sortByAddDate(boolean isAscending);
-        void sortByLastUpdate(boolean isAscending);
-    }
 
     private boolean isAscendingAddDate;
     private boolean isAscendingLastUpdate;
-    private ListActionHandler listActionHandler;
     @Nullable
     private SearchView searchView;
+    private NotesViewModel notesViewModel;
 
     @NonNull
     public static OptionsFragment newInstance() {
@@ -37,11 +30,7 @@ public class OptionsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getParentFragment() instanceof ListActionHandler) {
-            listActionHandler = (ListActionHandler) getParentFragment();
-        } else {
-            throw new IllegalStateException("ParentFragment must implement ListActionHandler");
-        }
+        notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
     }
 
     @Override
@@ -73,7 +62,7 @@ public class OptionsFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(@NonNull String newText) {
-                listActionHandler.filter(newText);
+                notesViewModel.getFilter().filter(newText);
                 return true;
             }
         };
@@ -88,11 +77,11 @@ public class OptionsFragment extends Fragment {
                 String arrow;
                 if (isButtonAddDate) {
                     arrow = isAscendingAddDate ? "↓" : "↑";
-                    listActionHandler.sortByAddDate(isAscendingAddDate);
+                    notesViewModel.sortByAddDate(isAscendingAddDate);
                     isAscendingAddDate = !isAscendingAddDate;
                 } else {
                     arrow = isAscendingLastUpdate ? "↓" : "↑";
-                    listActionHandler.sortByLastUpdate(isAscendingLastUpdate);
+                    notesViewModel.sortByLastUpdate(isAscendingLastUpdate);
                     isAscendingLastUpdate = !isAscendingLastUpdate;
                 }
                 button.setText(changeArrow(button.getText().toString(), arrow));
@@ -116,3 +105,4 @@ public class OptionsFragment extends Fragment {
         }
     }
 }
+

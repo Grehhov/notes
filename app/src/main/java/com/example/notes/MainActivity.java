@@ -13,9 +13,6 @@ public class MainActivity extends AppCompatActivity implements NotesFragment.Nav
 
     public static final int CREATE_NOTE_REQUEST = 1;
     public static final int EDIT_NOTE_REQUEST = 2;
-    public static final String BUNDLE_NOTE_NAME = "name";
-    public static final String BUNDLE_NOTE_DESCRIPTION = "description";
-    public static final String BUNDLE_NOTE_INDEX = "index";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,8 +33,8 @@ public class MainActivity extends AppCompatActivity implements NotesFragment.Nav
         commitTargetTransaction(targetFragment, noteFragment, CREATE_NOTE_REQUEST);
     }
 
-    public void onItemClick(@NonNull Fragment targetFragment, @NonNull Note note, int position) {
-        NoteFragment noteFragment = NoteFragment.newInstance(note, position);
+    public void onItemClick(@NonNull Fragment targetFragment, int position) {
+        NoteFragment noteFragment = NoteFragment.newInstance(position);
         commitTargetTransaction(targetFragment, noteFragment, EDIT_NOTE_REQUEST);
     }
 

@@ -1,10 +1,11 @@
 package com.example.notes;
 
-import android.content.Intent;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,17 +15,14 @@ import android.widget.TextView;
 
 import static android.app.Activity.RESULT_OK;
 
-
 /**
  * Управляет окном добавления/редактирования заметки
  */
 public class NoteFragment extends Fragment {
 
-    @Nullable
-    private String name;
-    @Nullable
-    private String description;
-    private int indexNote;
+    public static final String BUNDLE_NOTE_INDEX = "index";
+    private int indexNote = -1;
+    private NoteViewModel noteViewModel;
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -32,12 +30,10 @@ public class NoteFragment extends Fragment {
     }
 
     @NonNull
-    public static NoteFragment newInstance(@NonNull Note note, int indexNote) {
+    public static NoteFragment newInstance(int indexNote) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putString(MainActivity.BUNDLE_NOTE_NAME, note.getName());
-        args.putString(MainActivity.BUNDLE_NOTE_DESCRIPTION, note.getDescription());
-        args.putInt(MainActivity.BUNDLE_NOTE_INDEX, indexNote);
+        args.putInt(BUNDLE_NOTE_INDEX, indexNote);
         fragment.setArguments(args);
         return fragment;
     }
@@ -45,10 +41,9 @@ public class NoteFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        noteViewModel = ViewModelProviders.of(requireActivity()).get(NoteViewModel.class);
         if (getArguments() != null) {
-            name = getArguments().getString(MainActivity.BUNDLE_NOTE_NAME);
-            description = getArguments().getString(MainActivity.BUNDLE_NOTE_DESCRIPTION);
-            indexNote = getArguments().getInt(MainActivity.BUNDLE_NOTE_INDEX);
+            indexNote = getArguments().getInt(BUNDLE_NOTE_INDEX);
         }
     }
 
@@ -57,10 +52,13 @@ public class NoteFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_note, container, false);
-        EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
-        EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
-        nameEditView.setText(name);
-        descriptionEditView.setText(description);
+        if (indexNote >= 0) {
+            Note note = noteViewModel.getNote(indexNote);
+            EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
+            EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
+            nameEditView.setText(note.getName());
+            descriptionEditView.setText(note.getDescription());
+        }
 
         Button editNoteButton = rootView.findViewById(R.id.note_edit_button);
         editNoteButton.setOnClickListener(new View.OnClickListener() {
@@ -76,18 +74,25 @@ public class NoteFragment extends Fragment {
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
     void onEditButtonClick(@NonNull View view) {
-        Intent intent = new Intent();
-        Bundle bundle = new Bundle();
         String name = ((TextView) view.findViewById(R.id.note_name_edit_text)).getText().toString();
-        String description = ((TextView) view.findViewById(R.id.note_description_edit_text))
-                .getText().toString();
-        bundle.putString(MainActivity.BUNDLE_NOTE_NAME, name);
-        bundle.putString(MainActivity.BUNDLE_NOTE_DESCRIPTION, description);
-        bundle.putInt(MainActivity.BUNDLE_NOTE_INDEX, indexNote);
-        intent.putExtras(bundle);
-        Fragment targetFragment = getTargetFragment();
-        if (targetFragment != null) {
-            targetFragment.onActivityResult(getTargetRequestCode(), RESULT_OK, intent);
+        String description = ((TextView) view.findViewById(R.id.note_description_edit_text)).getText().toString();
+        if (!TextUtils.isEmpty(name)) {
+            int requestCode = getTargetRequestCode();
+            switch (requestCode) {
+                case MainActivity.CREATE_NOTE_REQUEST:
+                    noteViewModel.addNote(new Note(name, description));
+                    break;
+                case MainActivity.EDIT_NOTE_REQUEST:
+                    Note note = noteViewModel.getNote(indexNote);
+                    note.setName(name);
+                    note.setDescription(description);
+                    noteViewModel.setNote(indexNote, note);
+                    break;
+            }
+            Fragment targetFragment = getTargetFragment();
+            if (targetFragment != null) {
+                targetFragment.onActivityResult(requestCode, RESULT_OK, null);
+            }
         }
         requireActivity().onBackPressed();
     }

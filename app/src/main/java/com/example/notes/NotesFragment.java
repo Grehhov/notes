@@ -1,9 +1,11 @@
 package com.example.notes;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
@@ -11,33 +13,27 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static android.app.Activity.RESULT_OK;
 
 /**
  * Управляет окном списка заметок
  */
-public class NotesFragment extends Fragment
-        implements NoteAdapter.NoteClickHandler, OptionsFragment.ListActionHandler {
+public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHandler {
     /**
      * Обрабатывает нажатия во фрагменте
      */
     public interface NavigationClickHandler {
         void onCreateButtonClick(@NonNull Fragment targetFragment);
-        void onItemClick(@NonNull Fragment targetFragment, @NonNull Note note, int position);
+        void onItemClick(@NonNull Fragment targetFragment, int position);
     }
 
-    private static final String STATE_NOTE_LIST = "notes";
     private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "bottom_sheet_behavior";
-    @NonNull
-    private List<Note> notes = new ArrayList<>();
     private NoteAdapter noteAdapter;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
@@ -66,10 +62,6 @@ public class NotesFragment extends Fragment
 
         if (savedInstanceState != null) {
             stateBottomSheetBehavior = savedInstanceState.getInt(STATE_BOTTOM_SHEET_BEHAVIOR);
-            List<Note> noteList = savedInstanceState.getParcelableArrayList(STATE_NOTE_LIST);
-            if (noteList != null) {
-                notes = noteList;
-            }
         } else {
             OptionsFragment optionsFragment = OptionsFragment.newInstance();
             getChildFragmentManager()
@@ -77,7 +69,20 @@ public class NotesFragment extends Fragment
                     .add(R.id.notes_fragment_options_container, optionsFragment)
                     .commit();
         }
-        noteAdapter = new NoteAdapter(requireActivity(), notes, this);
+
+        NotesViewModel notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
+        LiveData<List<Note>> notes = notesViewModel.getNotes();
+        if (notes.getValue() != null) {
+            noteAdapter = new NoteAdapter(requireActivity(), notes.getValue(), this);
+        }
+        notes.observe(requireActivity(), new Observer<List<Note>>() {
+            @Override
+            public void onChanged(@Nullable List<Note> noteList) {
+                if (noteList != null) {
+                    noteAdapter.updateNotes(noteList);
+                }
+            }
+        });
     }
 
     @Override
@@ -149,35 +154,13 @@ public class NotesFragment extends Fragment
         if (bottomSheetBehavior != null) {
             outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
         }
-        outState.putParcelableArrayList(STATE_NOTE_LIST, (ArrayList<? extends Parcelable>) notes);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (data == null) {
-            return;
+        if (resultCode == RESULT_OK) {
+            needCleanSearch = true;
         }
-        Bundle bundle = data.getExtras();
-        if (bundle == null) {
-            return;
-        }
-        String noteName = bundle.getString(MainActivity.BUNDLE_NOTE_NAME);
-        if (TextUtils.isEmpty(noteName)) {
-            return;
-        }
-        String noteDescription = bundle.getString(MainActivity.BUNDLE_NOTE_DESCRIPTION);
-        switch (requestCode) {
-            case MainActivity.CREATE_NOTE_REQUEST:
-                notes.add(new Note(noteName, noteDescription));
-                break;
-            case MainActivity.EDIT_NOTE_REQUEST:
-                int index = bundle.getInt(MainActivity.BUNDLE_NOTE_INDEX);
-                notes.get(index).setDescription(noteName);
-                notes.get(index).setDescription(noteDescription);
-                break;
-        }
-        needCleanSearch = true;
-        noteAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -194,19 +177,7 @@ public class NotesFragment extends Fragment
         navigationClickHandler = null;
     }
 
-    public void onItemClick(@NonNull Note note, int position) {
-        navigationClickHandler.onItemClick(this, note, position);
-    }
-
-    public void filter(@NonNull String query) {
-        noteAdapter.getFilter().filter(query);
-    }
-
-    public void sortByAddDate(boolean isAscending) {
-        noteAdapter.sortByAddDate(isAscending);
-    }
-
-    public void sortByLastUpdate(boolean isAscending) {
-        noteAdapter.sortByLastUpdate(isAscending);
+    public void onItemClick(int position) {
+        navigationClickHandler.onItemClick(this, position);
     }
 }
