@@ -62,7 +62,7 @@ public class OptionsFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(@NonNull String newText) {
-                notesViewModel.getFilter().filter(newText);
+                notesViewModel.filter(newText);
                 return true;
             }
         };

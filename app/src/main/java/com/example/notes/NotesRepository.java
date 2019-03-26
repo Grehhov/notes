@@ -13,12 +13,16 @@ public class NotesRepository {
     @NonNull
     private List<Note> notes;
     @Nullable
-    private static NotesRepository instance;
+    private volatile static NotesRepository instance;
 
     @NonNull
     static NotesRepository getInstance() {
         if (instance == null) {
-            instance = new NotesRepository();
+            synchronized (NotesRepository.class) {
+                if (instance == null) {
+                    instance = new NotesRepository();
+                }
+            }
         }
         return instance;
     }
@@ -46,7 +50,7 @@ public class NotesRepository {
         return notes.get(id);
     }
 
-    void setNote(int id, @NonNull Note note) {
+    void updateNote(int id, @NonNull Note note) {
         notes.set(id, note);
     }
 

@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
@@ -71,10 +72,8 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
         }
 
         NotesViewModel notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
+        noteAdapter = new NoteAdapter(requireActivity(), new ArrayList<Note>(), this);
         LiveData<List<Note>> notes = notesViewModel.getNotes();
-        if (notes.getValue() != null) {
-            noteAdapter = new NoteAdapter(requireActivity(), notes.getValue(), this);
-        }
         notes.observe(requireActivity(), new Observer<List<Note>>() {
             @Override
             public void onChanged(@Nullable List<Note> noteList) {

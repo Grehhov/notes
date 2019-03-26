@@ -1,5 +1,7 @@
 package com.example.notes;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -52,13 +54,18 @@ public class NoteFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_note, container, false);
-        if (indexNote >= 0) {
-            Note note = noteViewModel.getNote(indexNote);
-            EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
-            EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
-            nameEditView.setText(note.getName());
-            descriptionEditView.setText(note.getDescription());
-        }
+        LiveData<Note> noteLiveData = noteViewModel.getNote(indexNote);
+        noteLiveData.observe(this, new Observer<Note>() {
+            @Override
+            public void onChanged(@Nullable Note note) {
+                if (note != null) {
+                    EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
+                    EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
+                    nameEditView.setText(note.getName());
+                    descriptionEditView.setText(note.getDescription());
+                }
+            }
+        });
 
         Button editNoteButton = rootView.findViewById(R.id.note_edit_button);
         editNoteButton.setOnClickListener(new View.OnClickListener() {
@@ -74,8 +81,8 @@ public class NoteFragment extends Fragment {
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
     void onEditButtonClick(@NonNull View view) {
-        String name = ((TextView) view.findViewById(R.id.note_name_edit_text)).getText().toString();
-        String description = ((TextView) view.findViewById(R.id.note_description_edit_text)).getText().toString();
+        final String name = ((TextView) view.findViewById(R.id.note_name_edit_text)).getText().toString();
+        final String description = ((TextView) view.findViewById(R.id.note_description_edit_text)).getText().toString();
         if (!TextUtils.isEmpty(name)) {
             int requestCode = getTargetRequestCode();
             switch (requestCode) {
@@ -83,10 +90,17 @@ public class NoteFragment extends Fragment {
                     noteViewModel.addNote(new Note(name, description));
                     break;
                 case MainActivity.EDIT_NOTE_REQUEST:
-                    Note note = noteViewModel.getNote(indexNote);
-                    note.setName(name);
-                    note.setDescription(description);
-                    noteViewModel.setNote(indexNote, note);
+                    LiveData<Note> noteLiveData = noteViewModel.getNote(indexNote);
+                    noteLiveData.observe(requireActivity(), new Observer<Note>() {
+                        @Override
+                        public void onChanged(@Nullable Note note) {
+                            if (note != null) {
+                                note.setName(name);
+                                note.setDescription(description);
+                                noteViewModel.updateNote(indexNote, note);
+                            }
+                        }
+                    });
                     break;
             }
             Fragment targetFragment = getTargetFragment();

@@ -17,9 +17,11 @@ import java.util.List;
  */
 public class NotesViewModel extends ViewModel implements Filterable {
     @NonNull
-    private NotesRepository notesRepository;
+    final private NotesRepository notesRepository;
     @NonNull
-    private MutableLiveData<List<Note>> notes = new MutableLiveData<>();
+    final private MutableLiveData<List<Note>> notes = new MutableLiveData<>();
+    @NonNull
+    final private Filter notesFilter = new NotesFilter();
 
     public NotesViewModel() {
         this.notesRepository = NotesRepository.getInstance();
@@ -34,37 +36,15 @@ public class NotesViewModel extends ViewModel implements Filterable {
     @Override
     @NonNull
     public Filter getFilter() {
-        return new Filter() {
-            @NonNull
-            @Override
-            protected FilterResults performFiltering(@NonNull CharSequence charSequence) {
-                List<Note> visibleNotes;
-                String query = charSequence.toString().toLowerCase();
-                if (query.isEmpty()) {
-                    visibleNotes = notesRepository.getNotes();
-                } else {
-                    List<Note> filteredList = new ArrayList<>();
-                    for (Note note : notesRepository.getNotes()) {
-                        String nameNote = note.getName();
-                        String descriptionNote = note.getDescription();
-                        if (nameNote.toLowerCase().contains(query)
-                                || (descriptionNote != null && descriptionNote.toLowerCase().contains(query))) {
-                            filteredList.add(note);
-                        }
-                    }
-                    visibleNotes = filteredList;
-                }
-                FilterResults filterResults = new FilterResults();
-                filterResults.values = visibleNotes;
-                return filterResults;
-            }
+        return notesFilter;
+    }
 
-            @Override
-            @SuppressWarnings("unchecked")
-            protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
-                notes.setValue((ArrayList<Note>) filterResults.values);
-            }
-        };
+    /**
+     * Фильтрует список заметок по вохждению запроса в название или описание заметки
+     * @param charSequence - запрос
+     */
+    void filter(@NonNull CharSequence charSequence) {
+        notesFilter.filter(charSequence);
     }
 
     /**
@@ -97,6 +77,38 @@ public class NotesViewModel extends ViewModel implements Filterable {
             }
         });
         this.notes.setValue(notes);
+    }
+
+    private class NotesFilter extends Filter {
+        @NonNull
+        @Override
+        protected FilterResults performFiltering(@NonNull CharSequence charSequence) {
+            List<Note> visibleNotes;
+            String query = charSequence.toString().toLowerCase();
+            if (query.isEmpty()) {
+                visibleNotes = notesRepository.getNotes();
+            } else {
+                List<Note> filteredList = new ArrayList<>();
+                for (Note note : notesRepository.getNotes()) {
+                    String nameNote = note.getName();
+                    String descriptionNote = note.getDescription();
+                    if (nameNote.toLowerCase().contains(query)
+                            || (descriptionNote != null && descriptionNote.toLowerCase().contains(query))) {
+                        filteredList.add(note);
+                    }
+                }
+                visibleNotes = filteredList;
+            }
+            FilterResults filterResults = new FilterResults();
+            filterResults.values = visibleNotes;
+            return filterResults;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
+            notes.setValue((ArrayList<Note>) filterResults.values);
+        }
     }
 }
 

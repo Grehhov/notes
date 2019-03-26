@@ -1,5 +1,7 @@
 package com.example.notes;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 
@@ -8,19 +10,23 @@ import android.support.annotation.NonNull;
  */
 public class NoteViewModel extends ViewModel {
     @NonNull
-    private NotesRepository notesRepository;
+    final private NotesRepository notesRepository;
 
     public NoteViewModel() {
         this.notesRepository = NotesRepository.getInstance();
     }
 
     @NonNull
-    Note getNote(int index) {
-        return notesRepository.getNote(index);
+    LiveData<Note> getNote(int index) {
+        MutableLiveData<Note> note = new MutableLiveData<>();
+        if (index >= 0) {
+            note.setValue(notesRepository.getNote(index));
+        }
+        return note;
     }
 
-    void setNote(int id, @NonNull Note note) {
-        notesRepository.setNote(id, note);
+    void updateNote(int id, @NonNull Note note) {
+        notesRepository.updateNote(id, note);
     }
 
     void addNote(@NonNull Note note) {
