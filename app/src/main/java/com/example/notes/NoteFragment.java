@@ -47,6 +47,7 @@ public class NoteFragment extends Fragment {
         if (getArguments() != null) {
             indexNote = getArguments().getInt(BUNDLE_NOTE_INDEX);
         }
+        noteViewModel.setIndex(indexNote);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class NoteFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_note, container, false);
-        LiveData<Note> noteLiveData = noteViewModel.getNote(indexNote);
+        LiveData<Note> noteLiveData = noteViewModel.getNote();
         noteLiveData.observe(this, new Observer<Note>() {
             @Override
             public void onChanged(@Nullable Note note) {
@@ -90,17 +91,15 @@ public class NoteFragment extends Fragment {
                     noteViewModel.addNote(new Note(name, description));
                     break;
                 case MainActivity.EDIT_NOTE_REQUEST:
-                    LiveData<Note> noteLiveData = noteViewModel.getNote(indexNote);
-                    noteLiveData.observe(requireActivity(), new Observer<Note>() {
-                        @Override
-                        public void onChanged(@Nullable Note note) {
-                            if (note != null) {
-                                note.setName(name);
-                                note.setDescription(description);
-                                noteViewModel.updateNote(indexNote, note);
-                            }
+                    LiveData<Note> noteLiveData = noteViewModel.getNote();
+                    if (noteLiveData != null) {
+                        Note note = noteLiveData.getValue();
+                        if (note != null) {
+                            note.setName(name);
+                            note.setDescription(description);
+                            noteViewModel.updateNote(indexNote, note);
                         }
-                    });
+                    }
                     break;
             }
             Fragment targetFragment = getTargetFragment();

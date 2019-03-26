@@ -4,24 +4,30 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Управляет заметкой
  */
 public class NoteViewModel extends ViewModel {
     @NonNull
-    final private NotesRepository notesRepository;
+    private final NotesRepository notesRepository;
+    private final MutableLiveData<Note> note = new MutableLiveData<>();
 
     public NoteViewModel() {
         this.notesRepository = NotesRepository.getInstance();
     }
 
-    @NonNull
-    LiveData<Note> getNote(int index) {
-        MutableLiveData<Note> note = new MutableLiveData<>();
+    void setIndex(int index) {
         if (index >= 0) {
             note.setValue(notesRepository.getNote(index));
+        } else {
+            note.setValue(null);
         }
+    }
+
+    @Nullable
+    LiveData<Note> getNote() {
         return note;
     }
 

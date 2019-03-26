@@ -17,11 +17,11 @@ import java.util.List;
  */
 public class NotesViewModel extends ViewModel implements Filterable {
     @NonNull
-    final private NotesRepository notesRepository;
+    private final NotesRepository notesRepository;
     @NonNull
-    final private MutableLiveData<List<Note>> notes = new MutableLiveData<>();
+    private final MutableLiveData<List<Note>> notes = new MutableLiveData<>();
     @NonNull
-    final private Filter notesFilter = new NotesFilter();
+    private final Filter notesFilter = new NotesFilter();
 
     public NotesViewModel() {
         this.notesRepository = NotesRepository.getInstance();
