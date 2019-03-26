@@ -92,13 +92,11 @@ public class NoteFragment extends Fragment {
                     break;
                 case MainActivity.EDIT_NOTE_REQUEST:
                     LiveData<Note> noteLiveData = noteViewModel.getNote();
-                    if (noteLiveData != null) {
-                        Note note = noteLiveData.getValue();
-                        if (note != null) {
-                            note.setName(name);
-                            note.setDescription(description);
-                            noteViewModel.updateNote(indexNote, note);
-                        }
+                    Note note = noteLiveData.getValue();
+                    if (note != null) {
+                        note.setName(name);
+                        note.setDescription(description);
+                        noteViewModel.updateNote(indexNote, note);
                     }
                     break;
             }
