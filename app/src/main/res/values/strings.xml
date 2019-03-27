@@ -1,9 +1,11 @@
 <resources>
-    <string name="app_name">Notes</string>
+    <string name="app_name">Заметки</string>
     <string name="note_name">Название:</string>
     <string name="note_description">Описание:</string>
     <string name="note_button">OK</string>
     <string name="bottom_sheet_name">Фильтр и сортировка</string>
     <string name="bottom_sheet_sort_add">По добавлению</string>
     <string name="bottom_sheet_sort_update">По последнему обновлению</string>
+    <string name="note_create_actionbar_name">Создание заметки</string>
+    <string name="note_edit_actionbar_name">Редактирование заметки</string>
 </resources>
