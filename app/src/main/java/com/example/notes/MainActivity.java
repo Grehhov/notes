@@ -49,4 +49,12 @@ public class MainActivity extends AppCompatActivity implements NotesFragment.Nav
                 .addToBackStack(null)
                 .commit();
     }
+
+    @Override
+    public void onBackPressed() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.main_fragment_container);
+        if (!(fragment instanceof OnBackPressedListener) || ((OnBackPressedListener) fragment).allowBackPressed()) {
+            super.onBackPressed();
+        }
+    }
 }

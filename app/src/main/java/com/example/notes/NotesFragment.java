@@ -25,7 +25,9 @@ import static android.app.Activity.RESULT_OK;
 /**
  * Управляет окном списка заметок
  */
-public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHandler {
+public class NotesFragment extends Fragment
+        implements NoteAdapter.NoteClickHandler, OnBackPressedListener {
+
     /**
      * Обрабатывает нажатия во фрагменте
      */
@@ -178,5 +180,13 @@ public class NotesFragment extends Fragment implements NoteAdapter.NoteClickHand
 
     public void onItemClick(int position) {
         navigationClickHandler.onItemClick(this, position);
+    }
+
+    public boolean allowBackPressed() {
+        if (bottomSheetBehavior != null && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            return false;
+        }
+        return true;
     }
 }
