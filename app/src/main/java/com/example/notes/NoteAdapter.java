@@ -24,7 +24,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     }
 
     @NonNull
-    private SimpleDateFormat formatForDateNow = new SimpleDateFormat("hh:mm dd.MM.yyyy", Locale.getDefault());
+    private SimpleDateFormat formatForDateNow = new SimpleDateFormat("HH:mm dd.MM.yyyy", Locale.getDefault());
     @NonNull
     private final LayoutInflater inflater;
     @NonNull
