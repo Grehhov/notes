@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity implements NotesFragment.Nav
         changeActionBar(getResources().getString(R.string.note_create_actionbar_name), true);
     }
 
-    public void onItemClick(@NonNull Fragment targetFragment, int position) {
-        NoteFragment noteFragment = NoteFragment.newInstance(position);
+    public void onItemClick(@NonNull Fragment targetFragment, int noteId) {
+        NoteFragment noteFragment = NoteFragment.newInstance(noteId);
         commitTargetTransaction(targetFragment, noteFragment, EDIT_NOTE_REQUEST);
         changeActionBar(getResources().getString(R.string.note_edit_actionbar_name), true);
     }

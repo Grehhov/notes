@@ -23,12 +23,12 @@ import static android.app.Activity.RESULT_OK;
 public class NoteFragment extends Fragment {
 
     public static final String BUNDLE_NOTE_INDEX = "index";
-    private int indexNote = -1;
+    private int noteId = -1;
     private NoteViewModel noteViewModel;
 
     @NonNull
     public static NoteFragment newInstance() {
-         return new NoteFragment();
+        return new NoteFragment();
     }
 
     @NonNull
@@ -45,9 +45,9 @@ public class NoteFragment extends Fragment {
         super.onCreate(savedInstanceState);
         noteViewModel = ViewModelProviders.of(requireActivity()).get(NoteViewModel.class);
         if (getArguments() != null) {
-            indexNote = getArguments().getInt(BUNDLE_NOTE_INDEX);
+            noteId = getArguments().getInt(BUNDLE_NOTE_INDEX);
         }
-        noteViewModel.setIndex(indexNote);
+        noteViewModel.setIndex(noteId);
     }
 
     @Override
@@ -55,18 +55,20 @@ public class NoteFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_note, container, false);
-        LiveData<Note> noteLiveData = noteViewModel.getNote();
-        noteLiveData.observe(this, new Observer<Note>() {
-            @Override
-            public void onChanged(@Nullable Note note) {
-                if (note != null) {
-                    EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
-                    EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
-                    nameEditView.setText(note.getName());
-                    descriptionEditView.setText(note.getDescription());
+        if (savedInstanceState == null) {
+            LiveData<Note> noteLiveData = noteViewModel.getNote();
+            noteLiveData.observe(this, new Observer<Note>() {
+                @Override
+                public void onChanged(@Nullable Note note) {
+                    if (note != null) {
+                        EditText nameEditView = rootView.findViewById(R.id.note_name_edit_text);
+                        EditText descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
+                        nameEditView.setText(note.getName());
+                        descriptionEditView.setText(note.getDescription());
+                    }
                 }
-            }
-        });
+            });
+        }
 
         Button editNoteButton = rootView.findViewById(R.id.note_edit_button);
         editNoteButton.setOnClickListener(new View.OnClickListener() {
@@ -88,7 +90,7 @@ public class NoteFragment extends Fragment {
             int requestCode = getTargetRequestCode();
             switch (requestCode) {
                 case MainActivity.CREATE_NOTE_REQUEST:
-                    noteViewModel.addNote(new Note(name, description));
+                    noteViewModel.addNote(new Note(noteViewModel.getSizeNotes(), name, description));
                     break;
                 case MainActivity.EDIT_NOTE_REQUEST:
                     LiveData<Note> noteLiveData = noteViewModel.getNote();
@@ -96,7 +98,7 @@ public class NoteFragment extends Fragment {
                     if (note != null) {
                         note.setName(name);
                         note.setDescription(description);
-                        noteViewModel.updateNote(indexNote, note);
+                        noteViewModel.updateNote(note);
                     }
                     break;
             }

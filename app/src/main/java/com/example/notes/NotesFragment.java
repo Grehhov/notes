@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +37,17 @@ public class NotesFragment extends Fragment
         void onItemClick(@NonNull Fragment targetFragment, int position);
     }
 
-    private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "bottom_sheet_behavior";
+    private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "STATE_BOTTOM_SHEET_BEHAVIOR";
+    private static final String VISIBILITY_PROGRESS_BAR = "VISIBILITY_PROGRESS_BAR";
     private NoteAdapter noteAdapter;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
     @Nullable
     private BottomSheetBehavior bottomSheetBehavior;
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
+    @Nullable
+    private ProgressBar progressBar;
+    private int visibilityProgressBar = View.VISIBLE;
 
     @NonNull
     public static NotesFragment newInstance() {
@@ -65,6 +70,7 @@ public class NotesFragment extends Fragment
 
         if (savedInstanceState != null) {
             stateBottomSheetBehavior = savedInstanceState.getInt(STATE_BOTTOM_SHEET_BEHAVIOR);
+            visibilityProgressBar = savedInstanceState.getInt(VISIBILITY_PROGRESS_BAR);
         } else {
             OptionsFragment optionsFragment = OptionsFragment.newInstance();
             getChildFragmentManager()
@@ -84,6 +90,17 @@ public class NotesFragment extends Fragment
                 }
             }
         });
+
+        LiveData<Boolean> notesIsRefreshed = notesViewModel.getNotesIsRefreshed();
+        notesIsRefreshed.observe(requireActivity(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean isRefreshed) {
+                if (isRefreshed != null && progressBar != null) {
+                    visibilityProgressBar = isRefreshed ? View.VISIBLE : View.GONE;
+                    progressBar.setVisibility(visibilityProgressBar);
+                }
+            }
+        });
     }
 
     @Override
@@ -96,6 +113,9 @@ public class NotesFragment extends Fragment
         recyclerViewNotes.setAdapter(noteAdapter);
         recyclerViewNotes.addItemDecoration(new NotesItemDecoration(
                 getResources().getDimensionPixelSize(R.dimen.size_divider_note_list)));
+
+        progressBar = rootView.findViewById(R.id.notes_progressbar);
+        progressBar.setVisibility(visibilityProgressBar);
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
@@ -154,6 +174,7 @@ public class NotesFragment extends Fragment
         super.onSaveInstanceState(outState);
         if (bottomSheetBehavior != null) {
             outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
+            outState.putInt(VISIBILITY_PROGRESS_BAR, visibilityProgressBar);
         }
     }
 

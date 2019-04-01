@@ -13,6 +13,12 @@
         android:layout_marginLeft="10dp"
         android:layout_marginBottom="@dimen/bottom_sheet_peek_height"/>
 
+    <ProgressBar
+        android:id="@+id/notes_progressbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"/>
+
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

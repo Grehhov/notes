@@ -5,63 +5,78 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 /**
  * Представляет собой основные поля заметки
  */
 public class Note implements Parcelable {
+    @SerializedName("guid")
+    private int id;
     @NonNull
+    @SerializedName("title")
     private String name;
     @Nullable
+    @SerializedName("content")
     private String description;
     @NonNull
-    private Date addDate;
-    @NonNull
+    @SerializedName("date")
     private Date lastUpdate;
+    @SerializedName("deleted")
+    private boolean deleted;
 
-    public Note(@NonNull String name, @Nullable String description) {
+    Note(int id, @NonNull String name, @Nullable String description) {
+        this.id = id;
         this.name = name;
         this.description = description;
-        this.addDate = new Date();
         this.lastUpdate = new Date();
     }
 
     public Note(@NonNull Parcel in) {
+        id = in.readInt();
         name = in.readString();
         description = in.readString();
-        addDate = new Date(in.readLong());
         lastUpdate = new Date(in.readLong());
+        deleted = in.readInt() == 1;
+    }
+
+    int getId() {
+        return id;
     }
 
     @NonNull
-    public String getName() {
+    String getName() {
         return name;
     }
 
     @Nullable
-    public String getDescription() {
+    String getDescription() {
         return description;
     }
 
     @NonNull
-    public Date getAddDate() {
-        return addDate;
-    }
-
-    @NonNull
-    public Date getLastUpdate() {
+    Date getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setName(@NonNull String name) {
+    void setName(@NonNull String name) {
         this.name = name;
         this.lastUpdate = new Date();
     }
 
-    public void setDescription(@Nullable String description) {
+    void setDescription(@Nullable String description) {
         this.description = description;
         this.lastUpdate = new Date();
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void delete() {
+        deleted = true;
     }
 
     @Override
@@ -71,10 +86,11 @@ public class Note implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeString(name);
         dest.writeString(description);
-        dest.writeLong(addDate.getTime());
         dest.writeLong(lastUpdate.getTime());
+        dest.writeInt(deleted ? 1 : 0);
     }
 
     @NonNull

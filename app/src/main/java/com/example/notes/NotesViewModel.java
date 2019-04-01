@@ -15,22 +15,49 @@ import java.util.List;
 /**
  * Управляет списком заметок
  */
-public class NotesViewModel extends ViewModel implements Filterable {
+public class NotesViewModel extends ViewModel implements Filterable, NotesRepository.NotesRefreshListener {
     @NonNull
     private final NotesRepository notesRepository;
     @NonNull
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>();
     @NonNull
+    private final MutableLiveData<Boolean> notesIsRefreshed = new MutableLiveData<>();
+    @NonNull
     private final Filter notesFilter = new NotesFilter();
 
+
     public NotesViewModel() {
-        this.notesRepository = NotesRepository.getInstance();
-        notes.setValue(this.notesRepository.getNotes());
+        notesRepository = NotesRepository.getInstance();
+        notesRepository.addNotesRefreshListener(this);
+        notes.setValue(notesRepository.getNotes());
+        notesIsRefreshed.setValue(true);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        notesRepository.removeNotesRefreshListener(this);
     }
 
     @NonNull
     LiveData<List<Note>> getNotes() {
         return notes;
+    }
+
+    @NonNull
+    LiveData<Boolean> getNotesIsRefreshed() {
+        return notesIsRefreshed;
+    }
+
+    @Override
+    public void onStartRefresh() {
+        notesIsRefreshed.setValue(true);
+    }
+
+    @Override
+    public void onCompleteRefresh(@NonNull List<Note> newNotes) {
+        notes.setValue(newNotes);
+        notesIsRefreshed.setValue(false);
     }
 
     @Override
@@ -56,7 +83,7 @@ public class NotesViewModel extends ViewModel implements Filterable {
         Collections.sort(notes, new Comparator<Note>() {
             @Override
             public int compare(@NonNull Note a, @NonNull Note b) {
-                int resultCompare = a.getAddDate().compareTo(b.getAddDate());
+                int resultCompare = a.getId() - b.getId();
                 return isAscending ? resultCompare : -1 * resultCompare;
             }
         });

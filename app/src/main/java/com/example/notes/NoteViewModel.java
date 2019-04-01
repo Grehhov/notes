@@ -31,11 +31,15 @@ public class NoteViewModel extends ViewModel {
         return note;
     }
 
-    void updateNote(int id, @NonNull Note note) {
-        notesRepository.updateNote(id, note);
+    void updateNote(@NonNull Note note) {
+        notesRepository.updateNote(note);
     }
 
     void addNote(@NonNull Note note) {
         notesRepository.addNote(note);
+    }
+
+    int getSizeNotes() {
+        return this.notesRepository.getNotes().size();
     }
 }
