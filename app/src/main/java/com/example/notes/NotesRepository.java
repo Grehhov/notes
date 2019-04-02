@@ -34,23 +34,24 @@ public class NotesRepository {
     interface NotesRefreshListener {
         void onStartRefresh();
         void onCompleteRefresh(@NonNull List<Note> notes);
+        void onError();
     }
 
     private interface NotesApi {
         @POST("/notes/sync")
-        Call<NotesResponseBody> syncNotes(@Body NotesRequestBody notesRequestBody);
+        Call<NotesResponseBody> syncNotes(@NonNull @Body NotesRequestBody notesRequestBody);
     }
 
     private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String USER_NAME = "USER_NAME";
-    private static long version = 0L;
+    private long version = 0L;
     @NonNull
-    private static List<Note> notes = new ArrayList<>();
+    private List<Note> notes = new ArrayList<>();
     @Nullable
     private volatile static NotesRepository instance;
     @NonNull
-    private static HashSet<NotesRefreshListener> notesRefreshListeners = new HashSet<>();
-    private static NotesApi notesApi;
+    private HashSet<NotesRefreshListener> notesRefreshListeners = new HashSet<>();
+    private NotesApi notesApi;
 
     @NonNull
     static NotesRepository getInstance() {
@@ -75,19 +76,31 @@ public class NotesRepository {
                 .build();
         notesApi = retrofit.create(NotesApi.class);
         NotesRequestBody body = new NotesRequestBody(version, USER_NAME, notes);
-        new SyncNotes().execute(body);
+        new SyncNotes(this).execute(body);
     }
 
-    void addNotesRefreshListener(NotesRefreshListener listener) {
+    void addNotesRefreshListener(@NonNull NotesRefreshListener listener) {
         notesRefreshListeners.add(listener);
     }
 
-    void removeNotesRefreshListener(NotesRefreshListener listener) {
+    void removeNotesRefreshListener(@NonNull NotesRefreshListener listener) {
         notesRefreshListeners.remove(listener);
     }
 
+    private void notifyOnCompleteRefresh() {
+        for (NotesRefreshListener listener : notesRefreshListeners) {
+            listener.onCompleteRefresh(notes);
+        }
+    }
+
+    private void notifyOnError() {
+        for (NotesRefreshListener listener : notesRefreshListeners) {
+            listener.onError();
+        }
+    }
+
     @NonNull
-    public List<Note> getNotes() {
+    List<Note> getNotes() {
         return notes;
     }
 
@@ -108,7 +121,7 @@ public class NotesRepository {
         List<Note> notes = new ArrayList<>();
         notes.add(note);
         NotesRequestBody body = new NotesRequestBody(version, USER_NAME, notes);
-        new SyncNotes().execute(body);
+        new SyncNotes(this).execute(body);
     }
 
     private static class NotesRequestBody {
@@ -150,9 +163,16 @@ public class NotesRepository {
     }
 
     private static class SyncNotes extends AsyncTask<NotesRequestBody, Void, NotesResponseBody> {
+        @NonNull
+        private NotesRepository notesRepository;
+
+        SyncNotes(@NonNull NotesRepository notesRepository) {
+            this.notesRepository = notesRepository;
+        }
+
         @Override
         protected void onPreExecute() {
-            for (NotesRefreshListener listener : notesRefreshListeners) {
+            for (NotesRefreshListener listener : notesRepository.notesRefreshListeners) {
                 listener.onStartRefresh();
             }
         }
@@ -162,7 +182,7 @@ public class NotesRepository {
         protected NotesResponseBody doInBackground(@NonNull NotesRequestBody... notesRequestBody)  {
             Response<NotesResponseBody> response = null;
             try {
-                response = notesApi.syncNotes(notesRequestBody[0]).execute();
+                response = notesRepository.notesApi.syncNotes(notesRequestBody[0]).execute();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -172,20 +192,20 @@ public class NotesRepository {
         @Override
         protected void onPostExecute(@Nullable NotesResponseBody body) {
             if (body != null) {
-                if (version + 1 == body.version) {
+                if (notesRepository.version + 1 == body.version) {
                     Note note = body.notes.get(0);
-                    if (note.getId() == notes.size()) {
-                        notes.add(note);
+                    if (note.getId() == notesRepository.notes.size()) {
+                        notesRepository.notes.add(note);
                     } else {
-                        notes.set(note.getId(), note);
+                        notesRepository.notes.set(note.getId(), note);
                     }
                 } else {
-                    notes = body.notes;
+                    notesRepository.notes = body.notes;
                 }
-                version = body.version;
-                for (NotesRefreshListener listener : notesRefreshListeners) {
-                    listener.onCompleteRefresh(notes);
-                }
+                notesRepository.version = body.version;
+                notesRepository.notifyOnCompleteRefresh();
+            } else {
+                notesRepository.notifyOnError();
             }
         }
     }

@@ -19,6 +19,14 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"/>
 
+    <TextView
+        android:id="@+id/notes_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:layout_marginTop="10dp"/>
+
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

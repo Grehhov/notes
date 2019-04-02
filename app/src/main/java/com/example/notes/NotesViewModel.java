@@ -21,7 +21,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     @NonNull
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>();
     @NonNull
-    private final MutableLiveData<Boolean> notesIsRefreshed = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
     private final Filter notesFilter = new NotesFilter();
 
@@ -30,7 +30,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         notesRepository = NotesRepository.getInstance();
         notesRepository.addNotesRefreshListener(this);
         notes.setValue(notesRepository.getNotes());
-        notesIsRefreshed.setValue(true);
+        isRefreshing.setValue(true);
     }
 
     @Override
@@ -45,19 +45,25 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     }
 
     @NonNull
-    LiveData<Boolean> getNotesIsRefreshed() {
-        return notesIsRefreshed;
+    LiveData<Boolean> getIsRefreshing() {
+        return isRefreshing;
     }
 
     @Override
     public void onStartRefresh() {
-        notesIsRefreshed.setValue(true);
+        isRefreshing.setValue(true);
     }
 
     @Override
     public void onCompleteRefresh(@NonNull List<Note> newNotes) {
         notes.setValue(newNotes);
-        notesIsRefreshed.setValue(false);
+        isRefreshing.setValue(false);
+    }
+
+    @Override
+    public void onError() {
+        notes.setValue(null);
+        isRefreshing.setValue(false);
     }
 
     @Override

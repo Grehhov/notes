@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,9 @@ public class NotesFragment extends Fragment
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
     @Nullable
     private ProgressBar progressBar;
-    private int visibilityProgressBar = View.VISIBLE;
+    private int visibilityProgressBar = View.GONE;
+    @Nullable
+    private TextView errorTextView;
 
     @NonNull
     public static NotesFragment newInstance() {
@@ -87,11 +90,14 @@ public class NotesFragment extends Fragment
             public void onChanged(@Nullable List<Note> noteList) {
                 if (noteList != null) {
                     noteAdapter.updateNotes(noteList);
+                } else if (errorTextView != null) {
+                    errorTextView.setText(getResources().getString(R.string.notes_connection_error));
+                    noteAdapter.updateNotes(new ArrayList<Note>());
                 }
             }
         });
 
-        LiveData<Boolean> notesIsRefreshed = notesViewModel.getNotesIsRefreshed();
+        LiveData<Boolean> notesIsRefreshed = notesViewModel.getIsRefreshing();
         notesIsRefreshed.observe(requireActivity(), new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean isRefreshed) {
@@ -116,6 +122,8 @@ public class NotesFragment extends Fragment
 
         progressBar = rootView.findViewById(R.id.notes_progressbar);
         progressBar.setVisibility(visibilityProgressBar);
+
+        errorTextView = rootView.findViewById(R.id.notes_error);
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
