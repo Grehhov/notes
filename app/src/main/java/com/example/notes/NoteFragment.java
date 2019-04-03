@@ -24,9 +24,7 @@ public class NoteFragment extends Fragment {
     public static final String BUNDLE_NOTE_INDEX = "index";
     private int noteId = -1;
     private NoteViewModel noteViewModel;
-    @Nullable
     private EditText nameEditView;
-    @Nullable
     private EditText descriptionEditView;
 
     @NonNull
@@ -86,20 +84,15 @@ public class NoteFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (nameEditView != null && descriptionEditView != null) {
-            String name = nameEditView.getText().toString();
-            String description = descriptionEditView.getText().toString();
-            noteViewModel.saveNoteInfo(name, description);
-        }
+        String name = nameEditView.getText().toString();
+        String description = descriptionEditView.getText().toString();
+        noteViewModel.saveNoteInfo(name, description);
     }
 
     /**
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
     void onEditButtonClick() {
-        if (nameEditView == null || descriptionEditView == null) {
-            return;
-        }
         String name = nameEditView.getText().toString();
         String description = descriptionEditView.getText().toString();
         if (!TextUtils.isEmpty(name)) {
