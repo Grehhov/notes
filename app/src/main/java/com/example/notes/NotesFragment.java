@@ -12,7 +12,10 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +31,8 @@ import static android.app.Activity.RESULT_OK;
  * Управляет окном списка заметок
  */
 public class NotesFragment extends Fragment
-        implements NoteAdapter.NoteClickHandler, OnBackPressedListener {
+        implements NoteAdapter.NoteClickHandler, OnBackPressedListener,
+        NoteItemTouchHelperCallback.ItemTouchHelperListener {
 
     /**
      * Обрабатывает нажатия во фрагменте
@@ -41,9 +45,9 @@ public class NotesFragment extends Fragment
     private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "STATE_BOTTOM_SHEET_BEHAVIOR";
     private static final String VISIBILITY_PROGRESS_BAR = "VISIBILITY_PROGRESS_BAR";
     private NoteAdapter noteAdapter;
+    private NotesViewModel notesViewModel;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
-    @Nullable
     private BottomSheetBehavior bottomSheetBehavior;
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
     @Nullable
@@ -82,7 +86,7 @@ public class NotesFragment extends Fragment
                     .commit();
         }
 
-        NotesViewModel notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
+        notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
         noteAdapter = new NoteAdapter(requireActivity(), new ArrayList<Note>(), this);
         LiveData<List<Note>> notes = notesViewModel.getNotes();
         notes.observe(requireActivity(), new Observer<List<Note>>() {
@@ -100,9 +104,9 @@ public class NotesFragment extends Fragment
         LiveData<Boolean> notesIsRefreshed = notesViewModel.getIsRefreshing();
         notesIsRefreshed.observe(requireActivity(), new Observer<Boolean>() {
             @Override
-            public void onChanged(@Nullable Boolean isRefreshed) {
-                if (isRefreshed != null && progressBar != null) {
-                    visibilityProgressBar = isRefreshed ? View.VISIBLE : View.GONE;
+            public void onChanged(@Nullable Boolean isRefreshing) {
+                if (isRefreshing != null && progressBar != null) {
+                    visibilityProgressBar = isRefreshing ? View.VISIBLE : View.GONE;
                     progressBar.setVisibility(visibilityProgressBar);
                 }
             }
@@ -115,10 +119,22 @@ public class NotesFragment extends Fragment
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_notes, container, false);
 
+        Toolbar toolbar = rootView.findViewById(R.id.notes_toolbar);
+        toolbar.setTitle(getResources().getString(R.string.app_name));
+        AppCompatActivity activity = (AppCompatActivity) requireActivity();
+        activity.setSupportActionBar(toolbar);
+        if (activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
+
         RecyclerView recyclerViewNotes = rootView.findViewById(R.id.notes_recycler);
         recyclerViewNotes.setAdapter(noteAdapter);
         recyclerViewNotes.addItemDecoration(new NotesItemDecoration(
                 getResources().getDimensionPixelSize(R.dimen.size_divider_note_list)));
+
+        ItemTouchHelper.Callback callback = new NoteItemTouchHelperCallback(this);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(recyclerViewNotes);
 
         progressBar = rootView.findViewById(R.id.notes_progressbar);
         progressBar.setVisibility(visibilityProgressBar);
@@ -127,10 +143,8 @@ public class NotesFragment extends Fragment
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        if (bottomSheetBehavior != null) {
-            bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
-            bottomSheetBehavior.setState(stateBottomSheetBehavior);
-        }
+        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
+        bottomSheetBehavior.setState(stateBottomSheetBehavior);
 
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
@@ -153,9 +167,7 @@ public class NotesFragment extends Fragment
             if (optionsFragment != null) {
                 optionsFragment.clearQuery();
             }
-            if (bottomSheetBehavior != null) {
-                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-            }
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             needCleanSearch = false;
         }
     }
@@ -180,10 +192,9 @@ public class NotesFragment extends Fragment
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (bottomSheetBehavior != null) {
-            outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
-            outState.putInt(VISIBILITY_PROGRESS_BAR, visibilityProgressBar);
-        }
+        outState.putInt(VISIBILITY_PROGRESS_BAR, visibilityProgressBar);
+        outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
+
     }
 
     @Override
@@ -196,9 +207,7 @@ public class NotesFragment extends Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (bottomSheetBehavior != null) {
-            stateBottomSheetBehavior = bottomSheetBehavior.getState();
-        }
+        stateBottomSheetBehavior = bottomSheetBehavior.getState();
     }
 
     @Override
@@ -207,12 +216,17 @@ public class NotesFragment extends Fragment
         navigationClickHandler = null;
     }
 
+    public void onItemDeleted(int position) {
+        notesViewModel.deleteNote(position);
+        noteAdapter.removeNote(position);
+    }
+
     public void onItemClick(int position) {
         navigationClickHandler.onItemClick(this, position);
     }
 
     public boolean allowBackPressed() {
-        if (bottomSheetBehavior != null && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             return false;
         }

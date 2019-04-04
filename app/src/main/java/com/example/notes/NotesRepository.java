@@ -45,6 +45,7 @@ public class NotesRepository {
     private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String USER_NAME = "USER_NAME";
     private long version = 0L;
+    private int lastId = -1;
     @NonNull
     private List<Note> notes = new ArrayList<>();
     @Nullable
@@ -75,8 +76,6 @@ public class NotesRepository {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         notesApi = retrofit.create(NotesApi.class);
-        NotesRequestBody body = new NotesRequestBody(version, USER_NAME, notes);
-        new SyncNotes(this).execute(body);
     }
 
     void addNotesRefreshListener(@NonNull NotesRefreshListener listener) {
@@ -87,16 +86,29 @@ public class NotesRepository {
         notesRefreshListeners.remove(listener);
     }
 
+    private void notifyOnStartRefresh() {
+        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
+        for (NotesRefreshListener listener : list) {
+            listener.onStartRefresh();
+        }
+    }
+
     private void notifyOnCompleteRefresh() {
-        for (NotesRefreshListener listener : notesRefreshListeners) {
+        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
+        for (NotesRefreshListener listener : list) {
             listener.onCompleteRefresh(notes);
         }
     }
 
     private void notifyOnError() {
-        for (NotesRefreshListener listener : notesRefreshListeners) {
+        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
+        for (NotesRefreshListener listener : list) {
             listener.onError();
         }
+    }
+
+    int getUniqueId() {
+        return lastId + 1;
     }
 
     @NonNull
@@ -109,11 +121,22 @@ public class NotesRepository {
         return notes.get(id);
     }
 
+    void loadNotes() {
+        NotesRequestBody body = new NotesRequestBody(version, USER_NAME, notes);
+        new SyncNotes(this).execute(body);
+    }
+
     void updateNote(@NonNull Note note) {
         syncNote(note);
     }
 
     void addNote(@NonNull Note note) {
+        lastId++;
+        syncNote(note);
+    }
+
+    void deletedNote(@NonNull Note note) {
+        note.delete();
         syncNote(note);
     }
 
@@ -172,9 +195,7 @@ public class NotesRepository {
 
         @Override
         protected void onPreExecute() {
-            for (NotesRefreshListener listener : notesRepository.notesRefreshListeners) {
-                listener.onStartRefresh();
-            }
+            notesRepository.notifyOnStartRefresh();
         }
 
         @Nullable
@@ -193,7 +214,7 @@ public class NotesRepository {
         protected void onPostExecute(@Nullable NotesResponseBody body) {
             if (body != null) {
                 if (notesRepository.version + 1 == body.version) {
-                    Note note = body.notes.get(0);
+                    Note note = body.notes.get(body.notes.size() - 1);
                     if (note.getId() == notesRepository.notes.size()) {
                         notesRepository.notes.add(note);
                     } else {
@@ -201,6 +222,7 @@ public class NotesRepository {
                     }
                 } else {
                     notesRepository.notes = body.notes;
+                    notesRepository.lastId = body.notes.size() - 1;
                 }
                 notesRepository.version = body.version;
                 notesRepository.notifyOnCompleteRefresh();

@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -39,12 +40,15 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         final TextView descriptionView;
         @NonNull
         final TextView lastUpdateView;
+        @NonNull
+        final LinearLayout foregroundView;
 
         NotesViewHolder (@NonNull View itemView) {
             super(itemView);
             nameView = itemView.findViewById(R.id.note_list_name);
             descriptionView = itemView.findViewById(R.id.note_list_description);
             lastUpdateView = itemView.findViewById(R.id.note_list_last_update);
+            foregroundView = itemView.findViewById(R.id.note_list_foreground);
         }
     }
 
@@ -87,6 +91,15 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
     void updateNotes(@NonNull List<Note> notes){
         this.notes = notes;
         notifyDataSetChanged();
+    }
+
+    /**
+     * Удаляет заметку из списка заметок по указанной позиции
+     * @param position - позиция заметки
+     */
+    void removeNote(int position) {
+        notes.remove(position);
+        notifyItemRemoved(position);
     }
 }
 

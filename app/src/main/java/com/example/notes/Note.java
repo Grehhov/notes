@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * Представляет собой основные поля заметки
  */
-public class Note implements Parcelable {
+public class Note implements Parcelable, Cloneable {
     @SerializedName("guid")
     private int id;
     @NonNull
@@ -34,7 +34,7 @@ public class Note implements Parcelable {
         this.lastUpdate = new Date();
     }
 
-    public Note(@NonNull Parcel in) {
+    private Note(@NonNull Parcel in) {
         id = in.readInt();
         name = in.readString();
         description = in.readString();
@@ -71,12 +71,13 @@ public class Note implements Parcelable {
         this.lastUpdate = new Date();
     }
 
-    public boolean isDeleted() {
+    boolean isDeleted() {
         return deleted;
     }
 
-    public void delete() {
+    void delete() {
         deleted = true;
+        lastUpdate = new Date();
     }
 
     @Override
@@ -108,4 +109,10 @@ public class Note implements Parcelable {
             return new Note[size];
         }
     };
+
+    @NonNull
+    @Override
+    protected Note clone() throws CloneNotSupportedException {
+        return (Note) super.clone();
+    }
 }

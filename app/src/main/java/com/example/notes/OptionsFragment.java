@@ -102,6 +102,7 @@ public class OptionsFragment extends Fragment {
     public void clearQuery() {
         if (searchView != null) {
             searchView.setQuery("", false);
+            notesViewModel.filter("");
         }
     }
 }

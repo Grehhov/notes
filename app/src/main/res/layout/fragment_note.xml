@@ -2,34 +2,62 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:layout_margin="10dp">
+    android:orientation="vertical">
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/note_toolbar"
+        style="@style/Toolbar"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/note_name"/>
-    <EditText
-        android:id="@+id/note_name_edit_text"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_margin="10dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/note_description"/>
-    <EditText
-        android:id="@+id/note_description_edit_text"
-        android:inputType="textMultiLine"
-        android:lines="5"
-        android:gravity="top|left"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:scrollbars="vertical" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/note_name"/>
+        <EditText
+            android:id="@+id/note_name_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-    <Button
-        android:id="@+id/note_edit_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/note_button"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/note_description"/>
+        <EditText
+            android:id="@+id/note_description_edit_text"
+            android:inputType="textMultiLine"
+            android:lines="5"
+            android:gravity="top|left"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:scrollbars="vertical" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/note_edit_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/note_button"
+                android:layout_alignParentLeft="true"/>
+
+            <TextView
+                android:id="@+id/note_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"/>
+            <ProgressBar
+                android:id="@+id/note_progressbar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+    </LinearLayout>
 </LinearLayout>

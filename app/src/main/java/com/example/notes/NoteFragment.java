@@ -7,12 +7,19 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -26,6 +33,9 @@ public class NoteFragment extends Fragment {
     private NoteViewModel noteViewModel;
     private EditText nameEditView;
     private EditText descriptionEditView;
+    private ProgressBar progressBar;
+    private int visibilityProgressBar = View.GONE;
+    private TextView errorTextView;
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -44,7 +54,7 @@ public class NoteFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteViewModel = ViewModelProviders.of(requireActivity()).get(NoteViewModel.class);
+        noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
         if (getArguments() != null) {
             noteId = getArguments().getInt(BUNDLE_NOTE_INDEX);
         }
@@ -58,16 +68,33 @@ public class NoteFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_note, container, false);
-        LiveData<Note> noteLiveData = noteViewModel.getNote();
+
+        Toolbar toolbar = rootView.findViewById(R.id.note_toolbar);
+        configurationToolbar(toolbar);
+
         nameEditView = rootView.findViewById(R.id.note_name_edit_text);
         descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
+        LiveData<Note> noteLiveData = noteViewModel.getNote();
         noteLiveData.observe(this, new Observer<Note>() {
             @Override
             public void onChanged(@Nullable Note note) {
-                if (note != null && nameEditView != null && descriptionEditView != null) {
+                if (note != null) {
                     nameEditView.setText(note.getName());
                     descriptionEditView.setText(note.getDescription());
                 }
+            }
+        });
+
+        progressBar = rootView.findViewById(R.id.note_progressbar);
+        progressBar.setVisibility(visibilityProgressBar);
+
+        errorTextView = rootView.findViewById(R.id.note_error);
+
+        LiveData<Boolean> noteIsRefreshed = noteViewModel.getIsRefreshing();
+        noteIsRefreshed.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean isRefreshing) {
+                onChangedRefreshing(isRefreshing);
             }
         });
 
@@ -89,6 +116,65 @@ public class NoteFragment extends Fragment {
         noteViewModel.saveNoteInfo(name, description);
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        if (getTargetRequestCode() == MainActivity.EDIT_NOTE_REQUEST) {
+            inflater.inflate(R.menu.note_menu, menu);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                requireActivity().onBackPressed();
+                break;
+            case R.id.note_menu_delete:
+                noteViewModel.deleteNote();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Настраивает тулбар
+     * @param toolbar - тулбар окна
+     */
+    void configurationToolbar(@NonNull Toolbar toolbar) {
+        switch (getTargetRequestCode()) {
+            case MainActivity.CREATE_NOTE_REQUEST:
+                toolbar.setTitle(getResources().getString(R.string.note_create_actionbar_name));
+                break;
+            case MainActivity.EDIT_NOTE_REQUEST:
+                toolbar.setTitle(getResources().getString(R.string.note_edit_actionbar_name));
+                break;
+        }
+        AppCompatActivity activity = (AppCompatActivity) requireActivity();
+        activity.setSupportActionBar(toolbar);
+        if (activity.getSupportActionBar() != null) {
+            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        setHasOptionsMenu(true);
+    }
+
+    /**
+     * Обрабатывает изменение состояние обновления заметки
+     */
+    void onChangedRefreshing(@Nullable Boolean isRefreshing) {
+        if (isRefreshing != null) {
+            visibilityProgressBar = isRefreshing ? View.VISIBLE : View.GONE;
+            progressBar.setVisibility(visibilityProgressBar);
+            if (!isRefreshing) {
+                requireActivity().onBackPressed();
+            }
+        } else {
+            visibilityProgressBar = View.GONE;
+            progressBar.setVisibility(visibilityProgressBar);
+            errorTextView.setText(getResources().getString(R.string.notes_connection_error));
+        }
+    }
+
     /**
      * Обрабатывает нажатие по кнопке подтверждения создания/редактирования записи
      */
@@ -96,24 +182,19 @@ public class NoteFragment extends Fragment {
         String name = nameEditView.getText().toString();
         String description = descriptionEditView.getText().toString();
         if (!TextUtils.isEmpty(name)) {
-            int requestCode = getTargetRequestCode();
             noteViewModel.saveNoteInfo(name, description);
-            Note note = noteViewModel.getNote().getValue();
-            if (note != null) {
-                switch (requestCode) {
-                    case MainActivity.CREATE_NOTE_REQUEST:
-                        noteViewModel.addNote(note);
-                        break;
-                    case MainActivity.EDIT_NOTE_REQUEST:
-                        noteViewModel.updateNote(note);
-                        break;
-                }
+            switch (getTargetRequestCode()) {
+                case MainActivity.CREATE_NOTE_REQUEST:
+                    noteViewModel.addNote();
+                    break;
+                case MainActivity.EDIT_NOTE_REQUEST:
+                    noteViewModel.updateNote();
+                    break;
             }
             Fragment targetFragment = getTargetFragment();
             if (targetFragment != null) {
-                targetFragment.onActivityResult(requestCode, RESULT_OK, null);
+                targetFragment.onActivityResult(getTargetRequestCode(), RESULT_OK, null);
             }
-            requireActivity().onBackPressed();
         } else {
             nameEditView.setError(getResources().getString(R.string.note_required_field));
         }

@@ -24,13 +24,15 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
     private final Filter notesFilter = new NotesFilter();
-
+    @NonNull
+    private CharSequence lastQuery = "";
+    private Boolean isAscendingAddDate;
+    private Boolean isAscendingLastUpdate;
 
     public NotesViewModel() {
         notesRepository = NotesRepository.getInstance();
         notesRepository.addNotesRefreshListener(this);
-        notes.setValue(notesRepository.getNotes());
-        isRefreshing.setValue(true);
+        notesRepository.loadNotes();
     }
 
     @Override
@@ -49,6 +51,13 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         return isRefreshing;
     }
 
+    void deleteNote(int position) {
+        if (notes.getValue() != null) {
+            Note note = notes.getValue().get(position);
+            notesRepository.deletedNote(note);
+        }
+    }
+
     @Override
     public void onStartRefresh() {
         isRefreshing.setValue(true);
@@ -56,7 +65,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
 
     @Override
     public void onCompleteRefresh(@NonNull List<Note> newNotes) {
-        notes.setValue(newNotes);
+        filter(lastQuery);
         isRefreshing.setValue(false);
     }
 
@@ -73,6 +82,20 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     }
 
     /**
+     * Возвращает список неудаленных заметок
+     * @return неудаленные заметки
+     */
+    private List<Note> getActualNotes() {
+        List<Note> actualNotes = new ArrayList<>();
+        for (Note note : notesRepository.getNotes()) {
+            if (!note.isDeleted()) {
+                actualNotes.add(note);
+            }
+        }
+        return actualNotes;
+    }
+
+    /**
      * Фильтрует список заметок по вохждению запроса в название или описание заметки
      * @param charSequence - запрос
      */
@@ -85,6 +108,8 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
      * @param isAscending - по возрастания/убыванию
      */
     void sortByAddDate(final boolean isAscending) {
+        isAscendingAddDate = isAscending;
+        isAscendingLastUpdate = null;
         List<Note> notes = this.notes.getValue();
         Collections.sort(notes, new Comparator<Note>() {
             @Override
@@ -101,6 +126,8 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
      * @param isAscending - по возрастания/убыванию
      */
     void sortByLastUpdate(final boolean isAscending) {
+        isAscendingLastUpdate = isAscending;
+        isAscendingAddDate = null;
         List<Note> notes = this.notes.getValue();
         Collections.sort(notes, new Comparator<Note>() {
             @Override
@@ -118,11 +145,12 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         protected FilterResults performFiltering(@NonNull CharSequence charSequence) {
             List<Note> visibleNotes;
             String query = charSequence.toString().toLowerCase();
+            List<Note> actualNotes = getActualNotes();
             if (query.isEmpty()) {
-                visibleNotes = notesRepository.getNotes();
+                visibleNotes = actualNotes;
             } else {
                 List<Note> filteredList = new ArrayList<>();
-                for (Note note : notesRepository.getNotes()) {
+                for (Note note : actualNotes) {
                     String nameNote = note.getName();
                     String descriptionNote = note.getDescription();
                     if (nameNote.toLowerCase().contains(query)
@@ -141,6 +169,12 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         @SuppressWarnings("unchecked")
         protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
             notes.setValue((ArrayList<Note>) filterResults.values);
+            if (isAscendingAddDate != null) {
+                sortByAddDate(isAscendingAddDate);
+            } else if (isAscendingLastUpdate != null) {
+                sortByLastUpdate(isAscendingLastUpdate);
+            }
+            lastQuery = charSequence;
         }
     }
 }
