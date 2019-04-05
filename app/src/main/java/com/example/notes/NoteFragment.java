@@ -59,10 +59,10 @@ public class NoteFragment extends Fragment {
         if (savedInstanceState == null) {
             noteViewModel.setIndex(noteId);
         }
-        noteViewModel.getExitOnThink().observe(this, new Observer<Boolean>() {
+        noteViewModel.getExitOnSync().observe(this, new Observer<Boolean>() {
             @Override
-            public void onChanged(@Nullable Boolean exitOnThink) {
-                if (Boolean.TRUE.equals(exitOnThink)) {
+            public void onChanged(@Nullable Boolean exitOnSync) {
+                if (Boolean.TRUE.equals(exitOnSync)) {
                     requireActivity().onBackPressed();
                 }
             }

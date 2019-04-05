@@ -21,7 +21,7 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     @NonNull
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
-    private final MutableLiveData<Boolean> exitOnThink = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> exitOnSync = new MutableLiveData<>();
 
     public NoteViewModel() {
         this.notesRepository = NotesRepository.getInstance();
@@ -51,8 +51,8 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     }
 
     @NonNull
-    LiveData<Boolean> getExitOnThink() {
-        return exitOnThink;
+    LiveData<Boolean> getExitOnSync() {
+        return exitOnSync;
     }
 
     void saveNoteInfo(@NonNull String name, @Nullable String description) {
@@ -88,7 +88,7 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     @Override
     public void onSynchronized(@NonNull List<Note> notes) {
         if (Boolean.TRUE.equals(isRefreshing.getValue())) {
-            exitOnThink.setValue(true);
+            exitOnSync.setValue(true);
             isRefreshing.setValue(false);
         }
     }
