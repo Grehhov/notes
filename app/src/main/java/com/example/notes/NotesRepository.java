@@ -3,6 +3,7 @@ package com.example.notes;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -44,6 +45,7 @@ public class NotesRepository {
 
     private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String USER_NAME = "USER_NAME";
+    private static final String TAG = NotesRepository.class.getSimpleName();
     private long version = 0L;
     private int lastId = -1;
     @NonNull
@@ -135,7 +137,7 @@ public class NotesRepository {
         syncNote(note);
     }
 
-    void deletedNote(@NonNull Note note) {
+    void deleteNote(@NonNull Note note) {
         note.delete();
         syncNote(note);
     }
@@ -205,7 +207,7 @@ public class NotesRepository {
             try {
                 response = notesRepository.notesApi.syncNotes(notesRequestBody[0]).execute();
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error accessing server", e);
             }
             return response == null ? null : response.body();
         }

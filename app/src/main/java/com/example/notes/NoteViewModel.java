@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * Управляет заметкой
  */
 public class NoteViewModel extends ViewModel implements NotesRepository.NotesRefreshListener {
+    private static final String TAG = NoteViewModel.class.getSimpleName();
     @NonNull
     private final NotesRepository notesRepository;
     @NonNull
@@ -29,7 +31,7 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
             try {
                 note.setValue(notesRepository.getNote(index).clone());
             } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
+                Log.d(TAG,"Object cloning error", e);
             }
         } else {
             note.setValue(new Note(notesRepository.getUniqueId(), "", null));
@@ -69,7 +71,7 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
 
     void deleteNote() {
         if (note.getValue() != null) {
-            notesRepository.deletedNote(notesRepository.getNote(note.getValue().getId()));
+            notesRepository.deleteNote(notesRepository.getNote(note.getValue().getId()));
         }
     }
 

@@ -43,7 +43,6 @@ public class NotesFragment extends Fragment
     }
 
     private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "STATE_BOTTOM_SHEET_BEHAVIOR";
-    private static final String VISIBILITY_PROGRESS_BAR = "VISIBILITY_PROGRESS_BAR";
     private NoteAdapter noteAdapter;
     private NotesViewModel notesViewModel;
     private NavigationClickHandler navigationClickHandler;
@@ -53,7 +52,6 @@ public class NotesFragment extends Fragment
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
     @Nullable
     private ProgressBar progressBar;
-    private int visibilityProgressBar = View.GONE;
     @Nullable
     private TextView errorTextView;
 
@@ -78,7 +76,6 @@ public class NotesFragment extends Fragment
 
         if (savedInstanceState != null) {
             stateBottomSheetBehavior = savedInstanceState.getInt(STATE_BOTTOM_SHEET_BEHAVIOR);
-            visibilityProgressBar = savedInstanceState.getInt(VISIBILITY_PROGRESS_BAR);
         } else {
             OptionsFragment optionsFragment = OptionsFragment.newInstance();
             getChildFragmentManager()
@@ -107,8 +104,7 @@ public class NotesFragment extends Fragment
             @Override
             public void onChanged(@Nullable Boolean isRefreshing) {
                 if (isRefreshing != null && progressBar != null) {
-                    visibilityProgressBar = isRefreshing ? View.VISIBLE : View.GONE;
-                    progressBar.setVisibility(visibilityProgressBar);
+                    progressBar.setVisibility(isRefreshing ? View.VISIBLE : View.GONE);
                 }
             }
         });
@@ -138,7 +134,7 @@ public class NotesFragment extends Fragment
         touchHelper.attachToRecyclerView(recyclerViewNotes);
 
         progressBar = rootView.findViewById(R.id.notes_progressbar);
-        progressBar.setVisibility(visibilityProgressBar);
+        progressBar.setVisibility(View.GONE);
 
         errorTextView = rootView.findViewById(R.id.notes_error);
 
@@ -197,7 +193,6 @@ public class NotesFragment extends Fragment
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(VISIBILITY_PROGRESS_BAR, visibilityProgressBar);
         if (bottomSheetBehavior != null) {
             outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
         }

@@ -54,7 +54,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     void deleteNote(int position) {
         if (notes.getValue() != null) {
             Note note = notes.getValue().get(position);
-            notesRepository.deletedNote(note);
+            notesRepository.deleteNote(note);
         }
     }
 
@@ -85,6 +85,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
      * Возвращает список неудаленных заметок
      * @return неудаленные заметки
      */
+    @NonNull
     private List<Note> getActualNotes() {
         List<Note> actualNotes = new ArrayList<>();
         for (Note note : notesRepository.getNotes()) {

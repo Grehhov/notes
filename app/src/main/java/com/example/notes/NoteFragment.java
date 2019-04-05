@@ -34,8 +34,8 @@ public class NoteFragment extends Fragment {
     private EditText nameEditView;
     private EditText descriptionEditView;
     private ProgressBar progressBar;
-    private int visibilityProgressBar = View.GONE;
     private TextView errorTextView;
+    private boolean nowIsRefreshing;
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -70,7 +70,7 @@ public class NoteFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_note, container, false);
 
         Toolbar toolbar = rootView.findViewById(R.id.note_toolbar);
-        configurationToolbar(toolbar);
+        configureToolbar(toolbar);
 
         nameEditView = rootView.findViewById(R.id.note_name_edit_text);
         descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
@@ -86,7 +86,7 @@ public class NoteFragment extends Fragment {
         });
 
         progressBar = rootView.findViewById(R.id.note_progressbar);
-        progressBar.setVisibility(visibilityProgressBar);
+        progressBar.setVisibility(View.GONE);
 
         errorTextView = rootView.findViewById(R.id.note_error);
 
@@ -141,7 +141,7 @@ public class NoteFragment extends Fragment {
      * Настраивает тулбар
      * @param toolbar - тулбар окна
      */
-    void configurationToolbar(@NonNull Toolbar toolbar) {
+    void configureToolbar(@NonNull Toolbar toolbar) {
         switch (getTargetRequestCode()) {
             case MainActivity.CREATE_NOTE_REQUEST:
                 toolbar.setTitle(getResources().getString(R.string.note_create_actionbar_name));
@@ -163,14 +163,13 @@ public class NoteFragment extends Fragment {
      */
     void onChangedRefreshing(@Nullable Boolean isRefreshing) {
         if (isRefreshing != null) {
-            visibilityProgressBar = isRefreshing ? View.VISIBLE : View.GONE;
-            progressBar.setVisibility(visibilityProgressBar);
-            if (!isRefreshing) {
+            progressBar.setVisibility(isRefreshing ? View.VISIBLE : View.GONE);
+            if (!isRefreshing && nowIsRefreshing) {
                 requireActivity().onBackPressed();
             }
+            nowIsRefreshing = isRefreshing;
         } else {
-            visibilityProgressBar = View.GONE;
-            progressBar.setVisibility(visibilityProgressBar);
+            progressBar.setVisibility(View.GONE);
             errorTextView.setText(getResources().getString(R.string.notes_connection_error));
         }
     }
