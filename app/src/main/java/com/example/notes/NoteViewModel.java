@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Управляет заметкой
  */
-public class NoteViewModel extends ViewModel implements NotesRepository.NotesRefreshListener {
+public class NoteViewModel extends ViewModel implements NotesRepository.NotesSynchronizedListener {
     private static final String TAG = NoteViewModel.class.getSimpleName();
     @NonNull
     private final NotesRepository notesRepository;
@@ -20,10 +20,12 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
     private final MutableLiveData<Note> note = new MutableLiveData<>();
     @NonNull
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
+    @NonNull
+    private final MutableLiveData<Boolean> isSynchronized = new MutableLiveData<>();
 
     public NoteViewModel() {
         this.notesRepository = NotesRepository.getInstance();
-        this.notesRepository.addNotesRefreshListener(this);
+        this.notesRepository.addNotesSynchronizedListener(this);
     }
 
     void setIndex(int index) {
@@ -48,6 +50,11 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
         return isRefreshing;
     }
 
+    @NonNull
+    LiveData<Boolean> getIsSynchronized() {
+        return isSynchronized;
+    }
+
     void saveNoteInfo(@NonNull String name, @Nullable String description) {
         Note note = this.note.getValue();
         if (note != null) {
@@ -59,30 +66,28 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
 
     void updateNote() {
         if (note.getValue() != null) {
+            isRefreshing.setValue(true);
             notesRepository.updateNote(note.getValue());
         }
     }
 
     void addNote() {
         if (note.getValue() != null) {
+            isRefreshing.setValue(true);
             notesRepository.addNote(note.getValue());
         }
     }
 
     void deleteNote() {
         if (note.getValue() != null) {
+            isRefreshing.setValue(true);
             notesRepository.deleteNote(notesRepository.getNote(note.getValue().getId()));
         }
     }
 
     @Override
-    public void onStartRefresh() {
-        isRefreshing.setValue(true);
-    }
-
-    @Override
-    public void onCompleteRefresh(@NonNull List<Note> notes) {
-        isRefreshing.setValue(false);
+    public void onSynchronized(@NonNull List<Note> notes) {
+        isSynchronized.setValue(true);
     }
 
     @Override
@@ -93,6 +98,6 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesRef
     @Override
     protected void onCleared() {
         super.onCleared();
-        notesRepository.removeNotesRefreshListener(this);
+        notesRepository.removeNotesSynchronizedListener(this);
     }
 }

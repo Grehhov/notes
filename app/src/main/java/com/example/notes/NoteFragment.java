@@ -35,7 +35,6 @@ public class NoteFragment extends Fragment {
     private EditText descriptionEditView;
     private ProgressBar progressBar;
     private TextView errorTextView;
-    private boolean nowIsRefreshing;
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -61,6 +60,15 @@ public class NoteFragment extends Fragment {
         if (savedInstanceState == null) {
             noteViewModel.setIndex(noteId);
         }
+        LiveData<Boolean> noteIsSynchronized = noteViewModel.getIsSynchronized();
+        noteIsSynchronized.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean isSynchronized) {
+                if (isSynchronized != null && isSynchronized) {
+                    requireActivity().onBackPressed();
+                }
+            }
+        });
     }
 
     @Override
@@ -164,10 +172,6 @@ public class NoteFragment extends Fragment {
     void onChangedRefreshing(@Nullable Boolean isRefreshing) {
         if (isRefreshing != null) {
             progressBar.setVisibility(isRefreshing ? View.VISIBLE : View.GONE);
-            if (!isRefreshing && nowIsRefreshing) {
-                requireActivity().onBackPressed();
-            }
-            nowIsRefreshing = isRefreshing;
         } else {
             progressBar.setVisibility(View.GONE);
             errorTextView.setText(getResources().getString(R.string.notes_connection_error));

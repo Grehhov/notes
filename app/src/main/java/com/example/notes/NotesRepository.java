@@ -32,9 +32,8 @@ public class NotesRepository {
     /**
      * Обрабатывает процесс обновления списка заметок
      */
-    interface NotesRefreshListener {
-        void onStartRefresh();
-        void onCompleteRefresh(@NonNull List<Note> notes);
+    interface NotesSynchronizedListener {
+        void onSynchronized(@NonNull List<Note> notes);
         void onError();
     }
 
@@ -53,7 +52,7 @@ public class NotesRepository {
     @Nullable
     private volatile static NotesRepository instance;
     @NonNull
-    private HashSet<NotesRefreshListener> notesRefreshListeners = new HashSet<>();
+    private HashSet<NotesSynchronizedListener> notesSynchronizedListeners = new HashSet<>();
     private NotesApi notesApi;
 
     @NonNull
@@ -80,31 +79,24 @@ public class NotesRepository {
         notesApi = retrofit.create(NotesApi.class);
     }
 
-    void addNotesRefreshListener(@NonNull NotesRefreshListener listener) {
-        notesRefreshListeners.add(listener);
+    void addNotesSynchronizedListener(@NonNull NotesSynchronizedListener listener) {
+        notesSynchronizedListeners.add(listener);
     }
 
-    void removeNotesRefreshListener(@NonNull NotesRefreshListener listener) {
-        notesRefreshListeners.remove(listener);
-    }
-
-    private void notifyOnStartRefresh() {
-        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
-        for (NotesRefreshListener listener : list) {
-            listener.onStartRefresh();
-        }
+    void removeNotesSynchronizedListener(@NonNull NotesSynchronizedListener listener) {
+        notesSynchronizedListeners.remove(listener);
     }
 
     private void notifyOnCompleteRefresh() {
-        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
-        for (NotesRefreshListener listener : list) {
-            listener.onCompleteRefresh(notes);
+        List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
+        for (NotesSynchronizedListener listener : list) {
+            listener.onSynchronized(notes);
         }
     }
 
     private void notifyOnError() {
-        List<NotesRefreshListener> list = new ArrayList<>(notesRefreshListeners);
-        for (NotesRefreshListener listener : list) {
+        List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
+        for (NotesSynchronizedListener listener : list) {
             listener.onError();
         }
     }
@@ -193,11 +185,6 @@ public class NotesRepository {
 
         SyncNotes(@NonNull NotesRepository notesRepository) {
             this.notesRepository = notesRepository;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            notesRepository.notifyOnStartRefresh();
         }
 
         @Nullable

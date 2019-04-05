@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Управляет списком заметок
  */
-public class NotesViewModel extends ViewModel implements Filterable, NotesRepository.NotesRefreshListener {
+public class NotesViewModel extends ViewModel implements Filterable, NotesRepository.NotesSynchronizedListener {
     @NonNull
     private final NotesRepository notesRepository;
     @NonNull
@@ -31,14 +31,15 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
 
     public NotesViewModel() {
         notesRepository = NotesRepository.getInstance();
-        notesRepository.addNotesRefreshListener(this);
+        notesRepository.addNotesSynchronizedListener(this);
+        isRefreshing.setValue(true);
         notesRepository.loadNotes();
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
-        notesRepository.removeNotesRefreshListener(this);
+        notesRepository.removeNotesSynchronizedListener(this);
     }
 
     @NonNull
@@ -54,17 +55,13 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     void deleteNote(int position) {
         if (notes.getValue() != null) {
             Note note = notes.getValue().get(position);
+            isRefreshing.setValue(true);
             notesRepository.deleteNote(note);
         }
     }
 
     @Override
-    public void onStartRefresh() {
-        isRefreshing.setValue(true);
-    }
-
-    @Override
-    public void onCompleteRefresh(@NonNull List<Note> newNotes) {
+    public void onSynchronized(@NonNull List<Note> newNotes) {
         filter(lastQuery);
         isRefreshing.setValue(false);
     }
