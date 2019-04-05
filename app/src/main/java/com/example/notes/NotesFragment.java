@@ -48,6 +48,7 @@ public class NotesFragment extends Fragment
     private NotesViewModel notesViewModel;
     private NavigationClickHandler navigationClickHandler;
     private boolean needCleanSearch;
+    @Nullable
     private BottomSheetBehavior bottomSheetBehavior;
     private int stateBottomSheetBehavior = BottomSheetBehavior.STATE_COLLAPSED;
     @Nullable
@@ -143,8 +144,10 @@ public class NotesFragment extends Fragment
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
-        bottomSheetBehavior.setState(stateBottomSheetBehavior);
+        if (bottomSheetBehavior != null) {
+            bottomSheetBehavior.setBottomSheetCallback(getBottomSheetCallback(recyclerViewNotes));
+            bottomSheetBehavior.setState(stateBottomSheetBehavior);
+        }
 
         FloatingActionButton createNoteFab = rootView.findViewById(R.id.notes_create_note_fab);
         final NotesFragment targetFragment = this;
@@ -167,7 +170,9 @@ public class NotesFragment extends Fragment
             if (optionsFragment != null) {
                 optionsFragment.clearQuery();
             }
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            if (bottomSheetBehavior != null) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
             needCleanSearch = false;
         }
     }
@@ -193,7 +198,9 @@ public class NotesFragment extends Fragment
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(VISIBILITY_PROGRESS_BAR, visibilityProgressBar);
-        outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
+        if (bottomSheetBehavior != null) {
+            outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
+        }
 
     }
 
@@ -207,7 +214,9 @@ public class NotesFragment extends Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        stateBottomSheetBehavior = bottomSheetBehavior.getState();
+        if (bottomSheetBehavior != null) {
+            stateBottomSheetBehavior = bottomSheetBehavior.getState();
+        }
     }
 
     @Override
@@ -226,7 +235,7 @@ public class NotesFragment extends Fragment
     }
 
     public boolean allowBackPressed() {
-        if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+        if (bottomSheetBehavior != null && bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             return false;
         }
