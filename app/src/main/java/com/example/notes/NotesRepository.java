@@ -44,7 +44,7 @@ public class NotesRepository {
 
     private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String USER_NAME = "USER_NAME";
-    private static final String TAG = NotesRepository.class.getSimpleName();
+    private static final String TAG = "NotesRepository";
     private long version = 0L;
     private int lastId = -1;
     @NonNull

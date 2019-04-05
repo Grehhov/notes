@@ -1,6 +1,5 @@
 package com.example.notes;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -86,8 +85,7 @@ public class NotesFragment extends Fragment
 
         notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
         noteAdapter = new NoteAdapter(requireActivity(), new ArrayList<Note>(), this);
-        LiveData<List<Note>> notes = notesViewModel.getNotes();
-        notes.observe(requireActivity(), new Observer<List<Note>>() {
+        notesViewModel.getNotes().observe(requireActivity(), new Observer<List<Note>>() {
             @Override
             public void onChanged(@Nullable List<Note> noteList) {
                 if (noteList != null) {
@@ -99,8 +97,7 @@ public class NotesFragment extends Fragment
             }
         });
 
-        LiveData<Boolean> notesIsRefreshed = notesViewModel.getIsRefreshing();
-        notesIsRefreshed.observe(requireActivity(), new Observer<Boolean>() {
+        notesViewModel.getIsRefreshing().observe(requireActivity(), new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean isRefreshing) {
                 if (isRefreshing != null && progressBar != null) {

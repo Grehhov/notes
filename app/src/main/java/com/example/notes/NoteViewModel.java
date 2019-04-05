@@ -13,7 +13,7 @@ import java.util.List;
  * Управляет заметкой
  */
 public class NoteViewModel extends ViewModel implements NotesRepository.NotesSynchronizedListener {
-    private static final String TAG = NoteViewModel.class.getSimpleName();
+    private static final String TAG = "NoteViewModel";
     @NonNull
     private final NotesRepository notesRepository;
     @NonNull
@@ -21,7 +21,7 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     @NonNull
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
-    private final MutableLiveData<Boolean> isSynchronized = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> exitOnThink = new MutableLiveData<>();
 
     public NoteViewModel() {
         this.notesRepository = NotesRepository.getInstance();
@@ -51,8 +51,8 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     }
 
     @NonNull
-    LiveData<Boolean> getIsSynchronized() {
-        return isSynchronized;
+    LiveData<Boolean> getExitOnThink() {
+        return exitOnThink;
     }
 
     void saveNoteInfo(@NonNull String name, @Nullable String description) {
@@ -87,7 +87,10 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
 
     @Override
     public void onSynchronized(@NonNull List<Note> notes) {
-        isSynchronized.setValue(true);
+        if (Boolean.TRUE.equals(isRefreshing.getValue())) {
+            exitOnThink.setValue(true);
+            isRefreshing.setValue(false);
+        }
     }
 
     @Override

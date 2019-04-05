@@ -1,6 +1,5 @@
 package com.example.notes;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
@@ -60,11 +59,10 @@ public class NoteFragment extends Fragment {
         if (savedInstanceState == null) {
             noteViewModel.setIndex(noteId);
         }
-        LiveData<Boolean> noteIsSynchronized = noteViewModel.getIsSynchronized();
-        noteIsSynchronized.observe(this, new Observer<Boolean>() {
+        noteViewModel.getExitOnThink().observe(this, new Observer<Boolean>() {
             @Override
-            public void onChanged(@Nullable Boolean isSynchronized) {
-                if (isSynchronized != null && isSynchronized) {
+            public void onChanged(@Nullable Boolean exitOnThink) {
+                if (Boolean.TRUE.equals(exitOnThink)) {
                     requireActivity().onBackPressed();
                 }
             }
@@ -82,8 +80,7 @@ public class NoteFragment extends Fragment {
 
         nameEditView = rootView.findViewById(R.id.note_name_edit_text);
         descriptionEditView = rootView.findViewById(R.id.note_description_edit_text);
-        LiveData<Note> noteLiveData = noteViewModel.getNote();
-        noteLiveData.observe(this, new Observer<Note>() {
+        noteViewModel.getNote().observe(this, new Observer<Note>() {
             @Override
             public void onChanged(@Nullable Note note) {
                 if (note != null) {
@@ -98,8 +95,7 @@ public class NoteFragment extends Fragment {
 
         errorTextView = rootView.findViewById(R.id.note_error);
 
-        LiveData<Boolean> noteIsRefreshed = noteViewModel.getIsRefreshing();
-        noteIsRefreshed.observe(this, new Observer<Boolean>() {
+        noteViewModel.getIsRefreshing().observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean isRefreshing) {
                 onChangedRefreshing(isRefreshing);
