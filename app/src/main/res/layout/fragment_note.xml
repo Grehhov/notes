@@ -30,9 +30,8 @@
             android:id="@+id/note_name_edit_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/note_name_text_view" />
+            app:layout_constraintTop_toBottomOf="@+id/note_name_text_view"
+            android:inputType="text"/>
 
         <TextView
             android:id="@+id/note_description_text_view"
@@ -50,8 +49,6 @@
             android:inputType="textMultiLine"
             android:lines="5"
             android:scrollbars="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/note_description_text_view" />
 
         <Button
