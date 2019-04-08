@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity implements NotesFragment.Nav
         commitTargetTransaction(targetFragment, noteFragment, CREATE_NOTE_REQUEST);
     }
 
-    public void onItemClick(@NonNull Fragment targetFragment, int noteId) {
-        NoteFragment noteFragment = NoteFragment.newInstance(noteId);
+    public void onItemClick(@NonNull Fragment targetFragment, @NonNull String guid) {
+        NoteFragment noteFragment = NoteFragment.newInstance(guid);
         commitTargetTransaction(targetFragment, noteFragment, EDIT_NOTE_REQUEST);
     }
 

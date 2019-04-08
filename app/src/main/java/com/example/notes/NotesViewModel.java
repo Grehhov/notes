@@ -26,8 +26,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     private final Filter notesFilter = new NotesFilter();
     @NonNull
     private CharSequence lastQuery = "";
-    private Boolean isAscendingAddDate;
-    private Boolean isAscendingLastUpdate;
+    private boolean isAscendingLastUpdate;
 
     public NotesViewModel() {
         notesRepository = NotesRepository.getInstance();
@@ -61,7 +60,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     }
 
     @Override
-    public void onSynchronized(@NonNull List<Note> newNotes) {
+    public void onSynchronized() {
         filter(lastQuery);
         isRefreshing.setValue(false);
     }
@@ -98,25 +97,8 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
      * @param charSequence - запрос
      */
     void filter(@NonNull CharSequence charSequence) {
+        lastQuery = charSequence;
         notesFilter.filter(charSequence);
-    }
-
-    /**
-     * Сортирует список заметок по дате добавления
-     * @param isAscending - по возрастания/убыванию
-     */
-    void sortByAddDate(final boolean isAscending) {
-        isAscendingAddDate = isAscending;
-        isAscendingLastUpdate = null;
-        List<Note> notes = this.notes.getValue();
-        Collections.sort(notes, new Comparator<Note>() {
-            @Override
-            public int compare(@NonNull Note a, @NonNull Note b) {
-                int resultCompare = a.getId() - b.getId();
-                return isAscending ? resultCompare : -1 * resultCompare;
-            }
-        });
-        this.notes.setValue(notes);
     }
 
     /**
@@ -125,7 +107,6 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
      */
     void sortByLastUpdate(final boolean isAscending) {
         isAscendingLastUpdate = isAscending;
-        isAscendingAddDate = null;
         List<Note> notes = this.notes.getValue();
         Collections.sort(notes, new Comparator<Note>() {
             @Override
@@ -151,7 +132,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
                 for (Note note : actualNotes) {
                     String nameNote = note.getName();
                     String descriptionNote = note.getDescription();
-                    if (nameNote.toLowerCase().contains(query)
+                    if (nameNote != null && nameNote.toLowerCase().contains(query)
                             || (descriptionNote != null && descriptionNote.toLowerCase().contains(query))) {
                         filteredList.add(note);
                     }
@@ -167,13 +148,12 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         @SuppressWarnings("unchecked")
         protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
             notes.setValue((ArrayList<Note>) filterResults.values);
-            if (isAscendingAddDate != null) {
-                sortByAddDate(isAscendingAddDate);
-            } else if (isAscendingLastUpdate != null) {
-                sortByLastUpdate(isAscendingLastUpdate);
-            }
-            lastQuery = charSequence;
+            sortByLastUpdate(isAscendingLastUpdate);
         }
+    }
+
+    void clearQuery() {
+        lastQuery = "";
     }
 }
 

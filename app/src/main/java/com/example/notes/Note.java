@@ -1,7 +1,5 @@
 package com.example.notes;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -12,10 +10,11 @@ import java.util.Date;
 /**
  * Представляет собой основные поля заметки
  */
-public class Note implements Parcelable, Cloneable {
+public class Note implements Cloneable {
     @SerializedName("guid")
-    private int id;
-    @NonNull
+    @Nullable
+    private String guid;
+    @Nullable
     @SerializedName("title")
     private String name;
     @Nullable
@@ -27,26 +26,23 @@ public class Note implements Parcelable, Cloneable {
     @SerializedName("deleted")
     private boolean deleted;
 
-    Note(int id, @NonNull String name, @Nullable String description) {
-        this.id = id;
+    Note() {
+        this.lastUpdate = new Date();
+    }
+
+    Note(@Nullable String guid, @NonNull String name, @Nullable String description) {
+        this.guid = guid;
         this.name = name;
         this.description = description;
         this.lastUpdate = new Date();
     }
 
-    private Note(@NonNull Parcel in) {
-        id = in.readInt();
-        name = in.readString();
-        description = in.readString();
-        lastUpdate = new Date(in.readLong());
-        deleted = in.readInt() == 1;
+    @Nullable
+    String getGuid() {
+        return guid;
     }
 
-    int getId() {
-        return id;
-    }
-
-    @NonNull
+    @Nullable
     String getName() {
         return name;
     }
@@ -59,6 +55,10 @@ public class Note implements Parcelable, Cloneable {
     @NonNull
     Date getLastUpdate() {
         return lastUpdate;
+    }
+
+    void setGuid(@Nullable String guid) {
+        this.guid = guid;
     }
 
     void setName(@NonNull String name) {
@@ -79,36 +79,6 @@ public class Note implements Parcelable, Cloneable {
         deleted = true;
         lastUpdate = new Date();
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeInt(id);
-        dest.writeString(name);
-        dest.writeString(description);
-        dest.writeLong(lastUpdate.getTime());
-        dest.writeInt(deleted ? 1 : 0);
-    }
-
-    @NonNull
-    public static final Parcelable.Creator<Note> CREATOR = new Parcelable.Creator<Note>() {
-
-        @NonNull
-        @Override
-        public Note createFromParcel(@NonNull Parcel source) {
-            return new Note(source);
-        }
-
-        @NonNull
-        @Override
-        public Note[] newArray(int size) {
-            return new Note[size];
-        }
-    };
 
     @NonNull
     @Override

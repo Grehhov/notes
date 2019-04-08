@@ -14,8 +14,10 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Response;
@@ -33,7 +35,7 @@ public class NotesRepository {
      * Обрабатывает процесс обновления списка заметок
      */
     interface NotesSynchronizedListener {
-        void onSynchronized(@NonNull List<Note> notes);
+        void onSynchronized();
         void onError();
     }
 
@@ -43,12 +45,11 @@ public class NotesRepository {
     }
 
     private static final String BASE_URL = "http://10.0.2.2:8080/";
-    private static final String USER_NAME = "USER_NAME";
+    private static final String USER_NAME = "USER_NAME_V2";
     private static final String TAG = "NotesRepository";
     private long version = 0L;
-    private int lastId = -1;
     @NonNull
-    private List<Note> notes = new ArrayList<>();
+    private HashMap<String, Note> notes = new HashMap<>();
     @Nullable
     private volatile static NotesRepository instance;
     @NonNull
@@ -87,10 +88,10 @@ public class NotesRepository {
         notesSynchronizedListeners.remove(listener);
     }
 
-    private void notifyOnCompleteRefresh() {
+    private void notifyOnSynchronized() {
         List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
         for (NotesSynchronizedListener listener : list) {
-            listener.onSynchronized(notes);
+            listener.onSynchronized();
         }
     }
 
@@ -101,22 +102,19 @@ public class NotesRepository {
         }
     }
 
-    int getUniqueId() {
-        return lastId + 1;
-    }
-
     @NonNull
     List<Note> getNotes() {
-        return notes;
+        return new ArrayList<>(notes.values());
     }
 
-    @NonNull
-    Note getNote(int id) {
-        return notes.get(id);
+    @Nullable
+    Note getNote(@NonNull String guid) {
+        return notes.get(guid);
     }
 
     void loadNotes() {
-        NotesRequestBody body = new NotesRequestBody(version, USER_NAME, notes);
+        List<Note> noteList = new ArrayList<>(notes.values());
+        NotesRequestBody body = new NotesRequestBody(version, USER_NAME, noteList);
         new SyncNotes(this).execute(body);
     }
 
@@ -125,7 +123,7 @@ public class NotesRepository {
     }
 
     void addNote(@NonNull Note note) {
-        lastId++;
+        note.setGuid(UUID.randomUUID().toString());
         syncNote(note);
     }
 
@@ -204,17 +202,15 @@ public class NotesRepository {
             if (body != null) {
                 if (notesRepository.version + 1 == body.version) {
                     Note note = body.notes.get(body.notes.size() - 1);
-                    if (note.getId() == notesRepository.notes.size()) {
-                        notesRepository.notes.add(note);
-                    } else {
-                        notesRepository.notes.set(note.getId(), note);
-                    }
+                    notesRepository.notes.put(note.getGuid(), note);
                 } else {
-                    notesRepository.notes = body.notes;
-                    notesRepository.lastId = body.notes.size() - 1;
+                    notesRepository.notes = new HashMap<>();
+                    for (Note item : body.notes) {
+                        notesRepository.notes.put(item.getGuid(), item);
+                    }
                 }
                 notesRepository.version = body.version;
-                notesRepository.notifyOnCompleteRefresh();
+                notesRepository.notifyOnSynchronized();
             } else {
                 notesRepository.notifyOnError();
             }

@@ -4,11 +4,11 @@
     <string name="note_description">Описание:</string>
     <string name="note_button">OK</string>
     <string name="bottom_sheet_name">Фильтр и сортировка</string>
-    <string name="bottom_sheet_sort_add">По добавлению</string>
     <string name="bottom_sheet_sort_update">По последнему обновлению</string>
     <string name="note_create_actionbar_name">Создание заметки</string>
     <string name="note_edit_actionbar_name">Редактирование заметки</string>
     <string name="notes_connection_error">Ошибка соединения</string>
     <string name="note_required_field">Обязательное поле!</string>
     <string name="note_delete">Удалить</string>
+    <string name="notes_empty">Здесь слишком пусто &#128561;\nДобавь новую заметку!</string>
 </resources>

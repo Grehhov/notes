@@ -35,6 +35,15 @@
             android:textSize="16sp"
             android:layout_marginTop="10dp"/>
 
+        <TextView
+            android:id="@+id/notes_empty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:text="@string/notes_empty"
+            android:visibility="gone"/>
+
         <android.support.design.widget.CoordinatorLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

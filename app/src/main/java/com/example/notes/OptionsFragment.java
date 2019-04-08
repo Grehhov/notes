@@ -16,7 +16,6 @@ import android.widget.SearchView;
  */
 public class OptionsFragment extends Fragment {
 
-    private boolean isAscendingAddDate;
     private boolean isAscendingLastUpdate;
     @Nullable
     private SearchView searchView;
@@ -40,16 +39,19 @@ public class OptionsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_options, container, false);
 
         searchView = rootView.findViewById(R.id.options_search);
+
+        Button buttonSortUpdate = rootView.findViewById(R.id.options_button_sort_update);
+        buttonSortUpdate.setOnClickListener(getSortButtonClickListener(buttonSortUpdate));
+
+        return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         if (searchView != null) {
             searchView.setOnQueryTextListener(getQueryTextListener());
         }
-
-        Button buttonSortAdd = rootView.findViewById(R.id.options_button_sort_add);
-        Button buttonSortUpdate = rootView.findViewById(R.id.options_button_sort_update);
-        buttonSortAdd.setOnClickListener(getSortButtonClickListener(buttonSortAdd, buttonSortUpdate, true));
-        buttonSortUpdate.setOnClickListener(getSortButtonClickListener(buttonSortUpdate, buttonSortAdd, false));
-
-        return rootView;
     }
 
     @NonNull
@@ -69,23 +71,15 @@ public class OptionsFragment extends Fragment {
     }
 
     @NonNull
-    View.OnClickListener getSortButtonClickListener(@NonNull final Button button, @NonNull final Button otherButton,
-                                                    final boolean isButtonAddDate) {
+    View.OnClickListener getSortButtonClickListener(@NonNull final Button button) {
         return new View.OnClickListener() {
             @Override
             public void onClick(@NonNull View view) {
                 String arrow;
-                if (isButtonAddDate) {
-                    arrow = isAscendingAddDate ? "↓" : "↑";
-                    notesViewModel.sortByAddDate(isAscendingAddDate);
-                    isAscendingAddDate = !isAscendingAddDate;
-                } else {
-                    arrow = isAscendingLastUpdate ? "↓" : "↑";
-                    notesViewModel.sortByLastUpdate(isAscendingLastUpdate);
-                    isAscendingLastUpdate = !isAscendingLastUpdate;
-                }
+                arrow = isAscendingLastUpdate ? "↓" : "↑";
+                notesViewModel.sortByLastUpdate(isAscendingLastUpdate);
+                isAscendingLastUpdate = !isAscendingLastUpdate;
                 button.setText(changeArrow(button.getText().toString(), arrow));
-                otherButton.setText(changeArrow(otherButton.getText().toString(), ""));
             }
         };
     }
@@ -102,7 +96,6 @@ public class OptionsFragment extends Fragment {
     public void clearQuery() {
         if (searchView != null) {
             searchView.setQuery("", false);
-            notesViewModel.filter("");
         }
     }
 }

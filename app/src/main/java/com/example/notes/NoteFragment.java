@@ -27,8 +27,9 @@ import static android.app.Activity.RESULT_OK;
  */
 public class NoteFragment extends Fragment {
 
-    public static final String BUNDLE_NOTE_INDEX = "index";
-    private int noteId = -1;
+    public static final String BUNDLE_NOTE_GUID = "guid";
+    @Nullable
+    private String guid;
     private NoteViewModel noteViewModel;
     private EditText nameEditView;
     private EditText descriptionEditView;
@@ -41,10 +42,10 @@ public class NoteFragment extends Fragment {
     }
 
     @NonNull
-    public static NoteFragment newInstance(int indexNote) {
+    public static NoteFragment newInstance(@NonNull String guid) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putInt(BUNDLE_NOTE_INDEX, indexNote);
+        args.putString(BUNDLE_NOTE_GUID, guid);
         fragment.setArguments(args);
         return fragment;
     }
@@ -54,10 +55,10 @@ public class NoteFragment extends Fragment {
         super.onCreate(savedInstanceState);
         noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
         if (getArguments() != null) {
-            noteId = getArguments().getInt(BUNDLE_NOTE_INDEX);
+            guid = getArguments().getString(BUNDLE_NOTE_GUID);
         }
         if (savedInstanceState == null) {
-            noteViewModel.setIndex(noteId);
+            noteViewModel.setGuid(guid);
         }
         noteViewModel.getExitOnSync().observe(this, new Observer<Boolean>() {
             @Override

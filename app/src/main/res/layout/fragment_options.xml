@@ -24,17 +24,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <Button
-            android:id="@+id/options_button_sort_add"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/bottom_sheet_sort_add"
-            style="@style/Widget.AppCompat.Button.Borderless.Colored"/>
-        <Button
             android:id="@+id/options_button_sort_update"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="@string/bottom_sheet_sort_update"
             style="@style/Widget.AppCompat.Button.Borderless.Colored"/>
     </LinearLayout>

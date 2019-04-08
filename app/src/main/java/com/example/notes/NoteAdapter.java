@@ -21,7 +21,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
      * Обрабатывает нажатие по заметке из списка
      */
     public interface NoteClickHandler {
-        void onItemClick(int position);
+        void onItemClick(@NonNull String guid);
     }
 
     @NonNull
@@ -74,7 +74,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(@NonNull View view) {
-                noteClickHandler.onItemClick(note.getId());
+                if (note.getGuid() != null) {
+                    noteClickHandler.onItemClick(note.getGuid());
+                }
             }
         });
     }
@@ -88,7 +90,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NotesViewHolde
      * Обновляет список заметок
      * @param notes - новый список заметок
      */
-    void updateNotes(@NonNull List<Note> notes){
+    void updateNotes(@NonNull List<Note> notes) {
         this.notes = notes;
         notifyDataSetChanged();
     }

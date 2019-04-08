@@ -7,8 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.util.List;
-
 /**
  * Управляет заметкой
  */
@@ -28,15 +26,18 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
         this.notesRepository.addNotesSynchronizedListener(this);
     }
 
-    void setIndex(int index) {
-        if (index >= 0) {
-            try {
-                note.setValue(notesRepository.getNote(index).clone());
-            } catch (CloneNotSupportedException e) {
-                Log.d(TAG,"Object cloning error", e);
+    void setGuid(@Nullable String guid) {
+        if (guid != null) {
+            Note note = notesRepository.getNote(guid);
+            if (note != null) {
+                try {
+                    this.note.setValue(note.clone());
+                } catch (CloneNotSupportedException e) {
+                    Log.d(TAG, "Object cloning error", e);
+                }
             }
         } else {
-            note.setValue(new Note(notesRepository.getUniqueId(), "", null));
+            note.setValue(new Note());
         }
     }
 
@@ -79,14 +80,17 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     }
 
     void deleteNote() {
-        if (note.getValue() != null) {
+        if (note.getValue() != null && note.getValue().getGuid() != null) {
             isRefreshing.setValue(true);
-            notesRepository.deleteNote(notesRepository.getNote(note.getValue().getId()));
+            Note note = notesRepository.getNote(this.note.getValue().getGuid());
+            if (note != null) {
+                notesRepository.deleteNote(note);
+            }
         }
     }
 
     @Override
-    public void onSynchronized(@NonNull List<Note> notes) {
+    public void onSynchronized() {
         if (Boolean.TRUE.equals(isRefreshing.getValue())) {
             exitOnSync.setValue(true);
             isRefreshing.setValue(false);

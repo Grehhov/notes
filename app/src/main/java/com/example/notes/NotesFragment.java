@@ -38,7 +38,7 @@ public class NotesFragment extends Fragment
      */
     public interface NavigationClickHandler {
         void onCreateButtonClick(@NonNull Fragment targetFragment);
-        void onItemClick(@NonNull Fragment targetFragment, int position);
+        void onItemClick(@NonNull Fragment targetFragment, @NonNull String guid);
     }
 
     private static final String STATE_BOTTOM_SHEET_BEHAVIOR = "STATE_BOTTOM_SHEET_BEHAVIOR";
@@ -53,6 +53,8 @@ public class NotesFragment extends Fragment
     private ProgressBar progressBar;
     @Nullable
     private TextView errorTextView;
+    @Nullable
+    private TextView emptyTextView;
 
     @NonNull
     public static NotesFragment newInstance() {
@@ -90,6 +92,9 @@ public class NotesFragment extends Fragment
             public void onChanged(@Nullable List<Note> noteList) {
                 if (noteList != null) {
                     noteAdapter.updateNotes(noteList);
+                    if (emptyTextView != null) {
+                        emptyTextView.setVisibility(noteList.size() == 0 ? View.VISIBLE : View.GONE);
+                    }
                 } else if (errorTextView != null) {
                     errorTextView.setText(getResources().getString(R.string.notes_connection_error));
                     noteAdapter.updateNotes(new ArrayList<Note>());
@@ -135,6 +140,9 @@ public class NotesFragment extends Fragment
 
         errorTextView = rootView.findViewById(R.id.notes_error);
 
+        emptyTextView = rootView.findViewById(R.id.notes_empty);
+        //noteAdapter.setEmptyView(emptyTextView);
+
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         if (bottomSheetBehavior != null) {
@@ -155,13 +163,14 @@ public class NotesFragment extends Fragment
     }
 
     @Override
-    public void onStart(){
+    public void onStart() {
         super.onStart();
         if (needCleanSearch) {
             OptionsFragment optionsFragment = (OptionsFragment) getChildFragmentManager()
                     .findFragmentById(R.id.notes_fragment_options_container);
             if (optionsFragment != null) {
                 optionsFragment.clearQuery();
+                notesViewModel.clearQuery();
             }
             if (bottomSheetBehavior != null) {
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
@@ -193,7 +202,6 @@ public class NotesFragment extends Fragment
         if (bottomSheetBehavior != null) {
             outState.putInt(STATE_BOTTOM_SHEET_BEHAVIOR, bottomSheetBehavior.getState());
         }
-
     }
 
     @Override
@@ -222,8 +230,8 @@ public class NotesFragment extends Fragment
         noteAdapter.removeNote(position);
     }
 
-    public void onItemClick(int position) {
-        navigationClickHandler.onItemClick(this, position);
+    public void onItemClick(@NonNull String guid) {
+        navigationClickHandler.onItemClick(this, guid);
     }
 
     public boolean allowBackPressed() {
