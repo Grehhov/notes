@@ -1,8 +1,9 @@
 package com.example.notes;
 
+import android.app.Application;
+import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -10,7 +11,7 @@ import android.util.Log;
 /**
  * Управляет заметкой
  */
-public class NoteViewModel extends ViewModel implements NotesRepository.NotesSynchronizedListener {
+public class NoteViewModel extends AndroidViewModel implements NotesRepository.NotesSynchronizedListener {
     private static final String TAG = "NoteViewModel";
     @NonNull
     private final NotesRepository notesRepository;
@@ -21,8 +22,9 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     @NonNull
     private final MutableLiveData<Boolean> exitOnSync = new MutableLiveData<>();
 
-    public NoteViewModel() {
-        this.notesRepository = NotesRepository.getInstance();
+    public NoteViewModel(Application application) {
+        super(application);
+        this.notesRepository = NotesRepository.getInstance(application);
         this.notesRepository.addNotesSynchronizedListener(this);
     }
 

@@ -1,8 +1,9 @@
 package com.example.notes;
 
+import android.app.Application;
+import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.widget.Filter;
 import android.widget.Filterable;
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * Управляет списком заметок
  */
-public class NotesViewModel extends ViewModel implements Filterable, NotesRepository.NotesSynchronizedListener {
+public class NotesViewModel extends AndroidViewModel implements Filterable, NotesRepository.NotesSynchronizedListener {
     @NonNull
     private final NotesRepository notesRepository;
     @NonNull
@@ -28,8 +29,9 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     private CharSequence lastQuery = "";
     private boolean isAscendingLastUpdate;
 
-    public NotesViewModel() {
-        notesRepository = NotesRepository.getInstance();
+    public NotesViewModel(@NonNull Application application) {
+        super(application);
+        notesRepository = NotesRepository.getInstance(application);
         notesRepository.addNotesSynchronizedListener(this);
         isRefreshing.setValue(true);
         notesRepository.loadNotes();

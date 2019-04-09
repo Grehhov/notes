@@ -3,27 +3,20 @@ package com.example.notes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.Date;
 
 /**
  * Представляет собой основные поля заметки
  */
 public class Note implements Cloneable {
-    @SerializedName("guid")
     @Nullable
     private String guid;
     @Nullable
-    @SerializedName("title")
     private String name;
     @Nullable
-    @SerializedName("content")
     private String description;
     @NonNull
-    @SerializedName("date")
     private Date lastUpdate;
-    @SerializedName("deleted")
     private boolean deleted;
 
     Note() {
@@ -69,6 +62,10 @@ public class Note implements Cloneable {
     void setDescription(@Nullable String description) {
         this.description = description;
         this.lastUpdate = new Date();
+    }
+
+    void setLastUpdate(@NonNull Date lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     boolean isDeleted() {
