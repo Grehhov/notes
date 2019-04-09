@@ -108,14 +108,16 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     void sortByLastUpdate(final boolean isAscending) {
         isAscendingLastUpdate = isAscending;
         List<Note> notes = this.notes.getValue();
-        Collections.sort(notes, new Comparator<Note>() {
-            @Override
-            public int compare(@NonNull Note a, @NonNull Note b) {
-                int resultCompare = a.getLastUpdate().compareTo(b.getLastUpdate());
-                return isAscending ? resultCompare : -1 * resultCompare;
-            }
-        });
-        this.notes.setValue(notes);
+        if (notes != null) {
+            Collections.sort(notes, new Comparator<Note>() {
+                @Override
+                public int compare(@NonNull Note a, @NonNull Note b) {
+                    int resultCompare = a.getLastUpdate().compareTo(b.getLastUpdate());
+                    return isAscending ? resultCompare : -1 * resultCompare;
+                }
+            });
+            this.notes.setValue(notes);
+        }
     }
 
     private class NotesFilter extends Filter {

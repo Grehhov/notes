@@ -1,78 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/note_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/note_toolbar" >
     <android.support.v7.widget.Toolbar
         android:id="@+id/note_toolbar"
         style="@style/Toolbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/note_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="10dp"
+    <TextView
+        android:id="@+id/note_name_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/note_margin"
+        android:layout_marginLeft="@dimen/note_margin"
+        android:layout_marginTop="@dimen/note_margin"
+        android:text="@string/note_name"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/note_toolbar" >
-        <TextView
-            android:id="@+id/note_name_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/note_name"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/note_toolbar" />
 
-        <EditText
-            android:id="@+id/note_name_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/note_name_text_view"
-            android:inputType="text"/>
+    <EditText
+        android:id="@+id/note_name_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/note_margin"
+        android:layout_marginLeft="@dimen/note_margin"
+        android:layout_marginEnd="@dimen/note_margin"
+        android:layout_marginRight="@dimen/note_margin"
+        android:inputType="text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/note_name_text_view" />
 
-        <TextView
-            android:id="@+id/note_description_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/note_description"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/note_name_edit_text" />
+    <TextView
+        android:id="@+id/note_description_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/note_margin"
+        android:layout_marginLeft="@dimen/note_margin"
+        android:text="@string/note_description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/note_name_edit_text" />
 
-        <EditText
-            android:id="@+id/note_description_edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top|left"
-            android:inputType="textMultiLine"
-            android:lines="5"
-            android:scrollbars="vertical"
-            app:layout_constraintTop_toBottomOf="@+id/note_description_text_view" />
+    <EditText
+        android:id="@+id/note_description_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/note_margin"
+        android:layout_marginLeft="@dimen/note_margin"
+        android:layout_marginEnd="@dimen/note_margin"
+        android:layout_marginRight="@dimen/note_margin"
+        android:gravity="top|left"
+        android:inputType="textMultiLine"
+        android:lines="5"
+        android:scrollbars="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/note_description_text_view" />
 
-        <Button
-            android:id="@+id/note_edit_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/note_button"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/note_description_edit_text" />
+    <Button
+        android:id="@+id/note_edit_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/note_margin"
+        android:layout_marginLeft="@dimen/note_margin"
+        android:text="@string/note_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/note_description_edit_text" />
 
-        <TextView
-            android:id="@+id/note_error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@+id/note_edit_button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/note_edit_button" />
+    <TextView
+        android:id="@+id/note_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/note_margin"
+        android:layout_marginRight="@dimen/note_margin"
+        app:layout_constraintBottom_toBottomOf="@+id/note_edit_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/note_edit_button" />
 
-        <ProgressBar
-            android:id="@+id/note_progressbar"
-            android:layout_width="30dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@+id/note_edit_button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/note_edit_button" />
-    </android.support.constraint.ConstraintLayout>
-</LinearLayout>
+    <ProgressBar
+        android:id="@+id/note_progressbar"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/note_margin"
+        android:layout_marginRight="@dimen/note_margin"
+        app:layout_constraintBottom_toBottomOf="@+id/note_edit_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/note_edit_button" />
+</android.support.constraint.ConstraintLayout>

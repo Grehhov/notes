@@ -71,7 +71,6 @@ public class NotesRepository {
     private NotesRepository() {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Date.class, new DateLongFormatTypeAdapter())
-                .setLenient()
                 .create();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)

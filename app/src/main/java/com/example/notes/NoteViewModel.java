@@ -80,9 +80,10 @@ public class NoteViewModel extends ViewModel implements NotesRepository.NotesSyn
     }
 
     void deleteNote() {
-        if (note.getValue() != null && note.getValue().getGuid() != null) {
+        Note noteValue = note.getValue();
+        if (noteValue != null && noteValue.getGuid() != null) {
             isRefreshing.setValue(true);
-            Note note = notesRepository.getNote(this.note.getValue().getGuid());
+            Note note = notesRepository.getNote(noteValue.getGuid());
             if (note != null) {
                 notesRepository.deleteNote(note);
             }
