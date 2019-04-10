@@ -4,11 +4,29 @@ import android.app.Application;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
+import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
+
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
+import retrofit2.http.POST;
 
 /**
  * Содержит операции над хранилищем заметок
@@ -23,17 +41,25 @@ class NotesRepository {
         void onError();
     }
 
+    private interface NotesApi {
+        @POST("/notes/sync")
+        Call<NotesResponseBody> syncNotes(@NonNull @Body NotesRequestBody notesRequestBody);
+    }
+
+    private static final String BASE_URL = "http://10.0.2.2:8080/";
+    private static final String USER_NAME = "USER_NAME_V7";
     private static final String TAG = "NotesRepository";
     @NonNull
-    private HashMap<String, Note> notes = new HashMap<>();
+    HashMap<String, Note> notes = new HashMap<>();
     @Nullable
     private volatile static NotesRepository instance;
     @NonNull
     private HashSet<NotesSynchronizedListener> notesSynchronizedListeners = new HashSet<>();
-    private NotesDataSource notesDataSource;
+    private NotesApi notesApi;
+    NotesDao notesDao;
 
     @NonNull
-    static NotesRepository getInstance(Application application) {
+    static NotesRepository getInstance(@NonNull Application application) {
         if (instance == null) {
             synchronized (NotesRepository.class) {
                 if (instance == null) {
@@ -44,8 +70,21 @@ class NotesRepository {
         return instance;
     }
 
-    private NotesRepository(Application application) {
-        this.notesDataSource = new NotesDataSource(application);
+    private NotesRepository(@NonNull Application application) {
+        notesApi = createNotesApi();
+        notesDao = new NotesDao(application);
+    }
+
+    private NotesApi createNotesApi() {
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(Date.class, new DateLongFormatTypeAdapter())
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+        return retrofit.create(NotesApi.class);
     }
 
     void addNotesSynchronizedListener(@NonNull NotesSynchronizedListener listener) {
@@ -56,14 +95,14 @@ class NotesRepository {
         notesSynchronizedListeners.remove(listener);
     }
 
-    private void notifyOnSynchronized() {
+    void notifyOnSynchronized() {
         List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
         for (NotesSynchronizedListener listener : list) {
             listener.onSynchronized();
         }
     }
 
-    private void notifyOnError() {
+    void notifyOnError() {
         List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
         for (NotesSynchronizedListener listener : list) {
             listener.onError();
@@ -81,119 +120,123 @@ class NotesRepository {
     }
 
     void loadNotes() {
-        new GetAllTask( this).execute();
+        new AsyncSqliteHelper.GetAllTask(this).execute();
     }
 
     void updateNote(@NonNull Note note) {
-        new UpdateNoteTask(this).execute(note);
+        new AsyncSqliteHelper.UpdateNoteTask(this).execute(note);
     }
 
     void addNote(@NonNull Note note) {
-        new AddNoteTask(this).execute(note);
+        note.setGuid(UUID.randomUUID().toString());
+        new AsyncSqliteHelper.AddNoteTask(this).execute(note);
     }
 
     void deleteNote(@NonNull Note note) {
-        new DeleteNoteTask(this).execute(note);
+        new AsyncSqliteHelper.DeleteNoteTask(this).execute(note);
     }
 
-    private static class GetAllTask extends AsyncTask<Void, Void, List<Note>> {
+    @Nullable
+    @WorkerThread
+    private Response<NotesResponseBody> syncNotes(@NonNull List<Note> notes) {
+        Response<NotesResponseBody> response = null;
+        try {
+            response = notesApi
+                    .syncNotes(new NotesRequestBody(0, USER_NAME, notes))
+                    .execute();
+        } catch (IOException e) {
+            Log.e(TAG, "Error accessing server", e);
+        }
+
+        return response;
+    }
+
+    private static class DateLongFormatTypeAdapter extends TypeAdapter<Date> {
+        @Override
+        public void write(@NonNull JsonWriter out, @NonNull Date value) throws IOException {
+            out.value(String.valueOf(value.getTime()));
+        }
+
+        @NonNull
+        @Override
+        public Date read(@NonNull JsonReader in) throws IOException {
+            return new Date(in.nextLong());
+        }
+    }
+
+    private static class NotesRequestBody {
+        public long version;
+        @NonNull
+        String user;
+        @NonNull
+        public List<Note> notes;
+
+        NotesRequestBody(long version, @NonNull String user, @NonNull List<Note> notes) {
+            this.version = version;
+            this.user = user;
+            this.notes = notes;
+        }
+    }
+
+    private static class NotesResponseBody {
+        public long version;
+        @NonNull
+        public List<Note> notes;
+
+        NotesResponseBody(long version, @NonNull List<Note> notes) {
+            this.version = version;
+            this.notes = notes;
+        }
+    }
+
+    static class MergeNotesTask extends AsyncTask<Void, Void, HashMap<String, Note>> {
         @NonNull
         private NotesRepository notesRepository;
 
-        GetAllTask(@NonNull NotesRepository notesRepository) {
+        MergeNotesTask(@NonNull NotesRepository notesRepository) {
             this.notesRepository = notesRepository;
         }
 
-        @Nullable
-        @Override
-        protected List<Note> doInBackground(Void... voids) {
-            return notesRepository.notesDataSource.getAllNotes();
-        }
-
-        @Override
-        public void onPostExecute(@Nullable List<Note> notes) {
-            if (notes != null) {
-                notesRepository.notes = new HashMap<>();
-                for (Note note : notes) {
-                    notesRepository.notes.put(note.getGuid(), note);
+        private boolean isNeedUpdate(@NonNull Note remoteNote, @NonNull HashMap<String, Note> mergedNotes) {
+            String guid = remoteNote.getGuid();
+            boolean keyIsContains = mergedNotes.containsKey(guid);
+            boolean isFreshest = false;
+            if (keyIsContains) {
+                long remoteLastUpdate = remoteNote.getLastUpdate().getTime();
+                Note localNote = mergedNotes.get(guid);
+                if (localNote != null) {
+                    long localLastUpdate = localNote.getLastUpdate().getTime();
+                    isFreshest = remoteLastUpdate > localLastUpdate;
                 }
-                notesRepository.notifyOnSynchronized();
-            } else {
-                notesRepository.notifyOnError();
             }
-        }
-    }
-
-    private static class AddNoteTask extends AsyncTask<Note, Void, Note> {
-        @NonNull
-        private NotesRepository notesRepository;
-
-        AddNoteTask(@NonNull NotesRepository notesRepository) {
-            this.notesRepository = notesRepository;
+            return !keyIsContains || isFreshest;
         }
 
         @Nullable
         @Override
-        protected Note doInBackground(@NonNull Note... notes) {
-            return notesRepository.notesDataSource.addNote(notes[0]);
-        }
+        protected HashMap<String, Note> doInBackground(Void... params) {
+            HashMap<String, Note> mergedNotes = notesRepository.notes;
 
-        @Override
-        public void onPostExecute(@Nullable Note note) {
-            if (note != null) {
-                notesRepository.notes.put(note.getGuid(), note);
-                notesRepository.notifyOnSynchronized();
-            } else {
-                notesRepository.notifyOnError();
+            Response<NotesResponseBody> response = notesRepository.syncNotes(new ArrayList<Note>());
+            if (response != null && response.body() != null) {
+                List<Note> remoteNotes = response.body().notes;
+                for (Note remoteNote : remoteNotes) {
+                    if (isNeedUpdate(remoteNote, mergedNotes)) {
+                        mergedNotes.put(remoteNote.getGuid(), remoteNote);
+                    }
+                }
+                List<Note> mergedNoteList = new ArrayList<>(mergedNotes.values());
+                notesRepository.notesDao.syncNotes(mergedNoteList);
+                notesRepository.syncNotes(mergedNoteList);
             }
-        }
-    }
 
-    private static class UpdateNoteTask extends AsyncTask<Note, Void, Note> {
-        @NonNull
-        private NotesRepository notesRepository;
-
-        UpdateNoteTask(@NonNull NotesRepository notesRepository) {
-            this.notesRepository = notesRepository;
-        }
-
-        @Nullable
-        @Override
-        protected Note doInBackground(@NonNull Note... notes) {
-            return notesRepository.notesDataSource.updateNote(notes[0]);
+            return mergedNotes;
         }
 
         @Override
-        public void onPostExecute(@Nullable Note note) {
-            if (note != null) {
-                notesRepository.notes.put(note.getGuid(), note);
-                notesRepository.notifyOnSynchronized();
-            } else {
-                notesRepository.notifyOnError();
-            }
-        }
-    }
-
-    private static class DeleteNoteTask extends AsyncTask<Note, Void, String> {
-        @NonNull
-        private NotesRepository notesRepository;
-
-        DeleteNoteTask(@NonNull NotesRepository notesRepository) {
-            this.notesRepository = notesRepository;
-        }
-
-        @Nullable
-        @Override
-        protected String doInBackground(@NonNull Note... notes) {
-            int count = notesRepository.notesDataSource.deleteNote(notes[0]);
-
-            return count == 0 ? null : notes[0].getGuid();
-        }
-
-        @Override
-        public void onPostExecute(@Nullable String guid) {
-            if (guid != null) {
-                notesRepository.notes.remove(guid);
+        protected void onPostExecute(@Nullable HashMap<String, Note> mergedNotes) {
+            if (mergedNotes != null) {
+                notesRepository.notes = mergedNotes;
                 notesRepository.notifyOnSynchronized();
             } else {
                 notesRepository.notifyOnError();
