@@ -52,15 +52,15 @@ class NotesRepository {
     private static final String USER_NAME = "USER_NAME_V7";
     private static final String TAG = "NotesRepository";
     @NonNull
-    HashMap<String, Note> notes = new HashMap<>();
+    private HashMap<String, Note> notes = new HashMap<>();
     @Nullable
     private volatile static NotesRepository instance;
     @NonNull
     private HashSet<NotesSynchronizedListener> notesSynchronizedListeners = new HashSet<>();
     @NonNull
-    private NotesApi notesApi;
+    private final NotesApi notesApi;
     @NonNull
-    NotesDao notesDao;
+    private final NotesDao notesDao;
     @Nullable
     private MergeNotesTask lastMergeNotesTask;
 
@@ -100,7 +100,7 @@ class NotesRepository {
         notesSynchronizedListeners.remove(listener);
     }
 
-    void notifyOnSynchronized() {
+    private void notifyOnSynchronized() {
         List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
         for (NotesSynchronizedListener listener : list) {
             listener.onSynchronized();
@@ -151,6 +151,43 @@ class NotesRepository {
 
     void deleteNote(@NonNull Note note) {
         new AsyncSqliteHelper.DeleteNoteTask(this).execute(note);
+    }
+
+    @NonNull
+    List<Note> getAllNotesDb() {
+        return notesDao.getAllNotes();
+    }
+
+    @Nullable
+    Note addNoteDb(@NonNull Note note) {
+        return notesDao.addNote(note);
+    }
+
+    @Nullable
+    Note updateNoteDb(@NonNull Note note) {
+        return notesDao.updateNote(note);
+    }
+
+    @Nullable
+    Note deleteNoteDb(@NonNull Note note) {
+        return notesDao.deleteNote(note);
+    }
+
+    void syncNotesDb(@NonNull List<Note> notes) {
+        notesDao.syncNotes(notes);
+    }
+
+    void updateNotes(@NonNull List<Note> newNotes) {
+        notes = new HashMap<>();
+        for (Note note : newNotes) {
+            notes.put(note.getGuid(), note);
+        }
+        notifyOnSynchronized();
+    }
+
+    void updateNotes(@NonNull Note note) {
+        notes.put(note.getGuid(), note);
+        notifyOnSynchronized();
     }
 
     private static class DateLongFormatTypeAdapter extends TypeAdapter<Date> {
@@ -236,19 +273,29 @@ class NotesRepository {
         @Nullable
         @Override
         protected HashMap<String, Note> doInBackground(Void... params) {
-            Response<NotesResponseBody> response = syncRemoteNotes(new ArrayList<Note>());
+            Response<NotesResponseBody> response = null;
             HashMap<String, Note> mergedNotes = notesRepository.notes;
-            if (response != null && response.body() != null) {
-                List<Note> remoteNotes = response.body().notes;
-                for (Note remoteNote : remoteNotes) {
-                    if (isNeedUpdate(remoteNote, mergedNotes)) {
-                        mergedNotes.put(remoteNote.getGuid(), remoteNote);
+            try {
+                response = syncRemoteNotes(new ArrayList<Note>());
+                if (response != null && response.body() != null) {
+                    List<Note> remoteNotes = response.body().notes;
+                    for (Note remoteNote : remoteNotes) {
+                        if (isCancelled()) {
+                            throw new InterruptedIOException();
+                        }
+                        if (isNeedUpdate(remoteNote, mergedNotes)) {
+                            mergedNotes.put(remoteNote.getGuid(), remoteNote);
+                        }
+                    }
+                    List<Note> mergedNoteList = new ArrayList<>(mergedNotes.values());
+                    response = syncRemoteNotes(mergedNoteList);
+                    if (response != null) {
+                        notesRepository.syncNotesDb(mergedNoteList);
                     }
                 }
-                List<Note> mergedNoteList = new ArrayList<>(mergedNotes.values());
-                response = syncRemoteNotes(mergedNoteList);
-                if (response != null) {
-                    notesRepository.notesDao.syncNotes(mergedNoteList);
+            } catch (InterruptedIOException e) {
+                if (!isCancelled()) {
+                    Log.e(TAG, "Thread interrupted", e);
                 }
             }
             return response == null ? null : mergedNotes;

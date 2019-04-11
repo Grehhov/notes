@@ -32,7 +32,7 @@
         android:layout_marginLeft="@dimen/note_margin"
         android:layout_marginEnd="@dimen/note_margin"
         android:layout_marginRight="@dimen/note_margin"
-        android:inputType="text"
+        android:inputType="textCapSentences"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/note_name_text_view" />
@@ -56,7 +56,7 @@
         android:layout_marginEnd="@dimen/note_margin"
         android:layout_marginRight="@dimen/note_margin"
         android:gravity="top|left"
-        android:inputType="textMultiLine"
+        android:inputType="textMultiLine|textCapSentences"
         android:lines="5"
         android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"

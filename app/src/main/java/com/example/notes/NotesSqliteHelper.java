@@ -9,22 +9,14 @@ public class NotesSqliteHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 1;
 
-    static final String TABLE_NOTES = "notes";
+    private static final String SQL_CREATE_TABLE_NOTES = "create table " + NotesDao.TABLE_NOTES + "(" +
+            NotesDao.COLUMN_GUID + " text primary key," +
+            NotesDao.COLUMN_NAME + " text," +
+            NotesDao.COLUMN_DESCRIPTION + " text," +
+            NotesDao.COLUMN_LAST_UPDATE + " integer," +
+            NotesDao.COLUMN_DELETED + " integer)";
 
-    static final String COLUMN_GUID = "guid";
-    static final String COLUMN_NAME = "name";
-    static final String COLUMN_DESCRIPTION = "description";
-    static final String COLUMN_LAST_UPDATE = "last_update";
-    static final String COLUMN_DELETED = "deleted";
-
-    private static final String SQL_CREATE_TABLE_NOTES = "create table " + TABLE_NOTES + "(" +
-            COLUMN_GUID + " text primary key," +
-            COLUMN_NAME + " text," +
-            COLUMN_DESCRIPTION + " text," +
-            COLUMN_LAST_UPDATE + " integer," +
-            COLUMN_DELETED + " integer)";
-
-    private static final String SQL_DROP_TABLE_NOTES = "drop table if exists " + TABLE_NOTES;
+    private static final String SQL_DROP_TABLE_NOTES = "drop table if exists " + NotesDao.TABLE_NOTES;
 
     NotesSqliteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

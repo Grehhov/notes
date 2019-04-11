@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -13,7 +12,7 @@ import java.util.List;
 class AsyncSqliteHelper {
     static class LoadNotesTask extends AsyncTask<Void, Void, List<Note>> {
         @NonNull
-        private NotesRepository repository;
+        private final NotesRepository repository;
 
         LoadNotesTask(@NonNull NotesRepository repository) {
             this.repository = repository;
@@ -22,17 +21,13 @@ class AsyncSqliteHelper {
         @Nullable
         @Override
         protected List<Note> doInBackground(Void... voids) {
-            return repository.notesDao.getAllNotes();
+            return repository.getAllNotesDb();
         }
 
         @Override
         public void onPostExecute(@Nullable List<Note> notes) {
             if (notes != null) {
-                repository.notes = new HashMap<>();
-                for (Note note : notes) {
-                    repository.notes.put(note.getGuid(), note);
-                }
-                repository.notifyOnSynchronized();
+                repository.updateNotes(notes);
             } else {
                 repository.notifyOnError();
             }
@@ -50,8 +45,7 @@ class AsyncSqliteHelper {
         @Override
         public void onPostExecute(@Nullable Note note) {
             if (note != null) {
-                repository.notes.put(note.getGuid(), note);
-                repository.notifyOnSynchronized();
+                repository.updateNotes(note);
             } else {
                 repository.notifyOnError();
             }
@@ -66,7 +60,7 @@ class AsyncSqliteHelper {
         @Nullable
         @Override
         protected Note doInBackground(@NonNull Note... notes) {
-            return super.repository.notesDao.addNote(notes[0]);
+            return super.repository.addNoteDb(notes[0]);
         }
     }
 
@@ -78,7 +72,7 @@ class AsyncSqliteHelper {
         @Nullable
         @Override
         protected Note doInBackground(@NonNull Note... notes) {
-            return super.repository.notesDao.updateNote(notes[0]);
+            return super.repository.updateNoteDb(notes[0]);
         }
     }
 
@@ -90,7 +84,7 @@ class AsyncSqliteHelper {
         @Nullable
         @Override
         protected Note doInBackground(@NonNull Note... notes) {
-            return super.repository.notesDao.deleteNote(notes[0]);
+            return super.repository.deleteNoteDb(notes[0]);
         }
     }
 }

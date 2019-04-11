@@ -16,16 +16,24 @@ import java.util.List;
  * Предоставляет методы взаимодействия с базой данных SQLite
  */
 class NotesDao {
+    static final String TABLE_NOTES = "notes";
+
+    static final String COLUMN_GUID = "guid";
+    static final String COLUMN_NAME = "name";
+    static final String COLUMN_DESCRIPTION = "description";
+    static final String COLUMN_LAST_UPDATE = "last_update";
+    static final String COLUMN_DELETED = "deleted";
+
     private SQLiteDatabase database;
     @NonNull
-    private NotesSqliteHelper dbHelper;
+    private final NotesSqliteHelper dbHelper;
     @NonNull
-    private String[] allColumns = {
-            NotesSqliteHelper.COLUMN_GUID,
-            NotesSqliteHelper.COLUMN_NAME,
-            NotesSqliteHelper.COLUMN_DESCRIPTION,
-            NotesSqliteHelper.COLUMN_LAST_UPDATE,
-            NotesSqliteHelper.COLUMN_DELETED
+    private final String[] allColumns = {
+            COLUMN_GUID,
+            COLUMN_NAME,
+            COLUMN_DESCRIPTION,
+            COLUMN_LAST_UPDATE,
+            COLUMN_DELETED
     };
 
     NotesDao(@NonNull Context context) {
@@ -48,7 +56,7 @@ class NotesDao {
         Cursor cursor = null;
         try {
             cursor = database.query(
-                    NotesSqliteHelper.TABLE_NOTES,
+                    TABLE_NOTES,
                     allColumns,
                     null,
                     null,
@@ -80,12 +88,12 @@ class NotesDao {
     private Note getNote(String guid) {
         open();
         Note note = null;
-        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
+        String selection = COLUMN_GUID + "=?";
         String[] selectionArgs = {guid};
         Cursor cursor = null;
         try {
             cursor = database.query(
-                    NotesSqliteHelper.TABLE_NOTES,
+                    TABLE_NOTES,
                     allColumns,
                     selection,
                     selectionArgs,
@@ -114,13 +122,13 @@ class NotesDao {
     Note addNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSqliteHelper.COLUMN_GUID, note.getGuid());
-        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+        values.put(COLUMN_GUID, note.getGuid());
+        values.put(COLUMN_NAME, note.getName());
+        values.put(COLUMN_DESCRIPTION, note.getDescription());
+        values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
         try {
-            database.insert(NotesSqliteHelper.TABLE_NOTES, null, values);
+            database.insert(TABLE_NOTES, null, values);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -132,14 +140,14 @@ class NotesDao {
     Note updateNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
-        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
+        values.put(COLUMN_NAME, note.getName());
+        values.put(COLUMN_DESCRIPTION, note.getDescription());
+        values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+        String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         try {
-            database.update(NotesSqliteHelper.TABLE_NOTES, values, selection, whereArgs);
+            database.update(TABLE_NOTES, values, selection, whereArgs);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -151,14 +159,14 @@ class NotesDao {
     Note deleteNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSqliteHelper.COLUMN_DELETED, 1);
-        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
+        values.put(COLUMN_NAME, note.getName());
+        values.put(COLUMN_DESCRIPTION, note.getDescription());
+        values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(COLUMN_DELETED, 1);
+        String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         try {
-            database.update(NotesSqliteHelper.TABLE_NOTES, values, selection, whereArgs);
+            database.update(TABLE_NOTES, values, selection, whereArgs);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -172,13 +180,13 @@ class NotesDao {
         try {
             for (Note note : notes) {
                 ContentValues values = new ContentValues();
-                values.put(NotesSqliteHelper.COLUMN_GUID, note.getGuid());
-                values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
-                values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
-                values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-                values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+                values.put(COLUMN_GUID, note.getGuid());
+                values.put(COLUMN_NAME, note.getName());
+                values.put(COLUMN_DESCRIPTION, note.getDescription());
+                values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+                values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
                 database.insertWithOnConflict(
-                        NotesSqliteHelper.TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                        TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
             }
             database.setTransactionSuccessful();
         } finally {
