@@ -77,12 +77,11 @@ public class NotesViewModel extends AndroidViewModel implements Filterable, Note
     @Override
     public void onSynchronizedWithNetwork() {
         filter(lastQuery);
-        Boolean isSynchronizedWithNetworkValue = isSynchronizedWithNetwork.getValue();
-        if (isSynchronizedWithNetworkValue != null) {
-            isSynchronizedWithNetwork.setValue(null);
-        } else {
-            isSynchronizedWithNetwork.setValue(true);
-        }
+        isSynchronizedWithNetwork.setValue(true);
+    }
+
+    void syncWithNetworkIsProcessed() {
+        isSynchronizedWithNetwork.setValue(null);
     }
 
     @Override

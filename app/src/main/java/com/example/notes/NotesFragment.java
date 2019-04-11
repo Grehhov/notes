@@ -114,8 +114,11 @@ public class NotesFragment extends Fragment
 
         notesViewModel.getIsSynchronizedWithNetwork().observe(requireActivity(), new Observer<Boolean>() {
             @Override
-            public void onChanged(@Nullable Boolean aBoolean) {
-                Toast.makeText(requireActivity(), R.string.notes_sync_network, Toast.LENGTH_SHORT).show();
+            public void onChanged(@Nullable Boolean isSynchronizedWithNetwork) {
+                if (isSynchronizedWithNetwork != null) {
+                    Toast.makeText(requireActivity(), R.string.notes_sync_network, Toast.LENGTH_SHORT).show();
+                    notesViewModel.syncWithNetworkIsProcessed();
+                }
             }
         });
     }
