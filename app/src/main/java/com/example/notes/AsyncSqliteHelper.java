@@ -7,12 +7,15 @@ import android.support.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Предоставляет возможность взаимодействия с базой данных SQLite в фоновом потоке
+ */
 class AsyncSqliteHelper {
-    static class GetAllTask extends AsyncTask<Void, Void, List<Note>> {
+    static class LoadNotesTask extends AsyncTask<Void, Void, List<Note>> {
         @NonNull
         private NotesRepository repository;
 
-        GetAllTask(@NonNull NotesRepository repository) {
+        LoadNotesTask(@NonNull NotesRepository repository) {
             this.repository = repository;
         }
 
@@ -30,14 +33,13 @@ class AsyncSqliteHelper {
                     repository.notes.put(note.getGuid(), note);
                 }
                 repository.notifyOnSynchronized();
-                new NotesRepository.MergeNotesTask(repository).execute();
             } else {
                 repository.notifyOnError();
             }
         }
     }
 
-    static abstract class BaseNoteTask extends AsyncTask<Note, Void, Note> {
+    private static abstract class BaseNoteTask extends AsyncTask<Note, Void, Note> {
         @NonNull
         private NotesRepository repository;
 
@@ -50,7 +52,6 @@ class AsyncSqliteHelper {
             if (note != null) {
                 repository.notes.put(note.getGuid(), note);
                 repository.notifyOnSynchronized();
-                new NotesRepository.MergeNotesTask(repository).execute();
             } else {
                 repository.notifyOnError();
             }

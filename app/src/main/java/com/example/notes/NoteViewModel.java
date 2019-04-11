@@ -101,6 +101,11 @@ public class NoteViewModel extends AndroidViewModel implements NotesRepository.N
     }
 
     @Override
+    public void onSynchronizedWithNetwork() {
+
+    }
+
+    @Override
     public void onError() {
         isRefreshing.setValue(null);
     }

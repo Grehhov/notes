@@ -12,27 +12,31 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Предоставляет методы взаимодействия с базой данных SQLite
+ */
 class NotesDao {
     private SQLiteDatabase database;
     @NonNull
-    private NotesSQLiteHelper dbHelper;
+    private NotesSqliteHelper dbHelper;
+    @NonNull
     private String[] allColumns = {
-            NotesSQLiteHelper.COLUMN_GUID,
-            NotesSQLiteHelper.COLUMN_NAME,
-            NotesSQLiteHelper.COLUMN_DESCRIPTION,
-            NotesSQLiteHelper.COLUMN_LAST_UPDATE,
-            NotesSQLiteHelper.COLUMN_DELETED
+            NotesSqliteHelper.COLUMN_GUID,
+            NotesSqliteHelper.COLUMN_NAME,
+            NotesSqliteHelper.COLUMN_DESCRIPTION,
+            NotesSqliteHelper.COLUMN_LAST_UPDATE,
+            NotesSqliteHelper.COLUMN_DELETED
     };
 
     NotesDao(@NonNull Context context) {
-        dbHelper = new NotesSQLiteHelper(context);
+        dbHelper = new NotesSqliteHelper(context);
     }
 
-    void open() {
+    private void open() {
         database = dbHelper.getWritableDatabase();
     }
 
-    void close() {
+    private void close() {
         database.close();
     }
 
@@ -44,7 +48,7 @@ class NotesDao {
         Cursor cursor = null;
         try {
             cursor = database.query(
-                    NotesSQLiteHelper.TABLE_NOTES,
+                    NotesSqliteHelper.TABLE_NOTES,
                     allColumns,
                     null,
                     null,
@@ -76,12 +80,12 @@ class NotesDao {
     private Note getNote(String guid) {
         open();
         Note note = null;
-        String selection = NotesSQLiteHelper.COLUMN_GUID + "=?";
+        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
         String[] selectionArgs = {guid};
         Cursor cursor = null;
         try {
             cursor = database.query(
-                    NotesSQLiteHelper.TABLE_NOTES,
+                    NotesSqliteHelper.TABLE_NOTES,
                     allColumns,
                     selection,
                     selectionArgs,
@@ -110,13 +114,13 @@ class NotesDao {
     Note addNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSQLiteHelper.COLUMN_GUID, note.getGuid());
-        values.put(NotesSQLiteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSQLiteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSQLiteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSQLiteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+        values.put(NotesSqliteHelper.COLUMN_GUID, note.getGuid());
+        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
+        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
+        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
         try {
-            database.insert(NotesSQLiteHelper.TABLE_NOTES, null, values);
+            database.insert(NotesSqliteHelper.TABLE_NOTES, null, values);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -128,14 +132,14 @@ class NotesDao {
     Note updateNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSQLiteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSQLiteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSQLiteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSQLiteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
-        String selection = NotesSQLiteHelper.COLUMN_GUID + "=?";
+        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
+        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
+        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         try {
-            database.update(NotesSQLiteHelper.TABLE_NOTES, values, selection, whereArgs);
+            database.update(NotesSqliteHelper.TABLE_NOTES, values, selection, whereArgs);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -147,14 +151,14 @@ class NotesDao {
     Note deleteNote(@NonNull Note note) {
         open();
         ContentValues values = new ContentValues();
-        values.put(NotesSQLiteHelper.COLUMN_NAME, note.getName());
-        values.put(NotesSQLiteHelper.COLUMN_DESCRIPTION, note.getDescription());
-        values.put(NotesSQLiteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(NotesSQLiteHelper.COLUMN_DELETED, 1);
-        String selection = NotesSQLiteHelper.COLUMN_GUID + "=?";
+        values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
+        values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
+        values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+        values.put(NotesSqliteHelper.COLUMN_DELETED, 1);
+        String selection = NotesSqliteHelper.COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         try {
-            database.update(NotesSQLiteHelper.TABLE_NOTES, values, selection, whereArgs);
+            database.update(NotesSqliteHelper.TABLE_NOTES, values, selection, whereArgs);
             return getNote(note.getGuid());
         } finally {
             close();
@@ -168,13 +172,13 @@ class NotesDao {
         try {
             for (Note note : notes) {
                 ContentValues values = new ContentValues();
-                values.put(NotesSQLiteHelper.COLUMN_GUID, note.getGuid());
-                values.put(NotesSQLiteHelper.COLUMN_NAME, note.getName());
-                values.put(NotesSQLiteHelper.COLUMN_DESCRIPTION, note.getDescription());
-                values.put(NotesSQLiteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-                values.put(NotesSQLiteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
+                values.put(NotesSqliteHelper.COLUMN_GUID, note.getGuid());
+                values.put(NotesSqliteHelper.COLUMN_NAME, note.getName());
+                values.put(NotesSqliteHelper.COLUMN_DESCRIPTION, note.getDescription());
+                values.put(NotesSqliteHelper.COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
+                values.put(NotesSqliteHelper.COLUMN_DELETED, note.isDeleted() ? 1 : 0);
                 database.insertWithOnConflict(
-                        NotesSQLiteHelper.TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                        NotesSqliteHelper.TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
             }
             database.setTransactionSuccessful();
         } finally {

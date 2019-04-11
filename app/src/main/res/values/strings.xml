@@ -11,4 +11,5 @@
     <string name="note_required_field">Обязательное поле!</string>
     <string name="note_delete">Удалить</string>
     <string name="notes_empty">Здесь слишком пусто &#128561;\nДобавь новую заметку!</string>
+    <string name="notes_sync_network">Синхронизировано с сетью</string>
 </resources>

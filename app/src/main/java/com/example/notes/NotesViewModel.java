@@ -24,6 +24,8 @@ public class NotesViewModel extends AndroidViewModel implements Filterable, Note
     @NonNull
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
+    private final MutableLiveData<Boolean> isSynchronizedWithNetwork = new MutableLiveData<>();
+    @NonNull
     private final Filter notesFilter = new NotesFilter();
     @NonNull
     private CharSequence lastQuery = "";
@@ -53,6 +55,11 @@ public class NotesViewModel extends AndroidViewModel implements Filterable, Note
         return isRefreshing;
     }
 
+    @NonNull
+    LiveData<Boolean> getIsSynchronizedWithNetwork() {
+        return isSynchronizedWithNetwork;
+    }
+
     void deleteNote(int position) {
         if (notes.getValue() != null) {
             Note note = notes.getValue().get(position);
@@ -65,6 +72,17 @@ public class NotesViewModel extends AndroidViewModel implements Filterable, Note
     public void onSynchronized() {
         filter(lastQuery);
         isRefreshing.setValue(false);
+    }
+
+    @Override
+    public void onSynchronizedWithNetwork() {
+        filter(lastQuery);
+        Boolean isSynchronizedWithNetworkValue = isSynchronizedWithNetwork.getValue();
+        if (isSynchronizedWithNetworkValue != null) {
+            isSynchronizedWithNetwork.setValue(null);
+        } else {
+            isSynchronizedWithNetwork.setValue(true);
+        }
     }
 
     @Override

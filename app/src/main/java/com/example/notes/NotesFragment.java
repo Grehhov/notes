@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,6 +111,13 @@ public class NotesFragment extends Fragment
                 }
             }
         });
+
+        notesViewModel.getIsSynchronizedWithNetwork().observe(requireActivity(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                Toast.makeText(requireActivity(), R.string.notes_sync_network, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -141,7 +149,6 @@ public class NotesFragment extends Fragment
         errorTextView = rootView.findViewById(R.id.notes_error);
 
         emptyTextView = rootView.findViewById(R.id.notes_empty);
-        //noteAdapter.setEmptyView(emptyTextView);
 
         View bottomSheet = rootView.findViewById(R.id.notes_fragment_options_container);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);

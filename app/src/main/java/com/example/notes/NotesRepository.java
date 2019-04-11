@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ class NotesRepository {
      */
     interface NotesSynchronizedListener {
         void onSynchronized();
+        void onSynchronizedWithNetwork();
         void onError();
     }
 
@@ -55,8 +57,12 @@ class NotesRepository {
     private volatile static NotesRepository instance;
     @NonNull
     private HashSet<NotesSynchronizedListener> notesSynchronizedListeners = new HashSet<>();
+    @NonNull
     private NotesApi notesApi;
+    @NonNull
     NotesDao notesDao;
+    @Nullable
+    private MergeNotesTask lastMergeNotesTask;
 
     @NonNull
     static NotesRepository getInstance(@NonNull Application application) {
@@ -99,6 +105,18 @@ class NotesRepository {
         for (NotesSynchronizedListener listener : list) {
             listener.onSynchronized();
         }
+        if (lastMergeNotesTask != null) {
+            lastMergeNotesTask.cancel(true);
+        }
+        lastMergeNotesTask = new NotesRepository.MergeNotesTask(this);
+        lastMergeNotesTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    private void notifyOnSynchronizedWithNetwork() {
+        List<NotesSynchronizedListener> list = new ArrayList<>(notesSynchronizedListeners);
+        for (NotesSynchronizedListener listener : list) {
+            listener.onSynchronizedWithNetwork();
+        }
     }
 
     void notifyOnError() {
@@ -119,7 +137,7 @@ class NotesRepository {
     }
 
     void loadNotes() {
-        new AsyncSqliteHelper.GetAllTask(this).execute();
+        new AsyncSqliteHelper.LoadNotesTask(this).execute();
     }
 
     void updateNote(@NonNull Note note) {
@@ -133,21 +151,6 @@ class NotesRepository {
 
     void deleteNote(@NonNull Note note) {
         new AsyncSqliteHelper.DeleteNoteTask(this).execute(note);
-    }
-
-    @Nullable
-    @WorkerThread
-    private Response<NotesResponseBody> syncNotes(@NonNull List<Note> notes) {
-        Response<NotesResponseBody> response = null;
-        try {
-            response = notesApi
-                    .syncNotes(new NotesRequestBody(0, USER_NAME, notes))
-                    .execute();
-        } catch (IOException e) {
-            Log.e(TAG, "Error accessing server", e);
-        }
-
-        return response;
     }
 
     private static class DateLongFormatTypeAdapter extends TypeAdapter<Date> {
@@ -211,12 +214,30 @@ class NotesRepository {
             return !keyIsContains || isFreshest;
         }
 
+        @WorkerThread
+        private Response<NotesResponseBody> syncRemoteNotes(@NonNull List<Note> notes) {
+            Response<NotesResponseBody> response = null;
+            try {
+                response = notesRepository
+                        .notesApi
+                        .syncNotes(new NotesRequestBody(0, USER_NAME, notes))
+                        .execute();
+            } catch (InterruptedIOException e) {
+                if (!isCancelled()) {
+                    Log.e(TAG, "Thread interrupted", e);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error accessing server", e);
+            }
+
+            return response;
+        }
+
         @Nullable
         @Override
         protected HashMap<String, Note> doInBackground(Void... params) {
+            Response<NotesResponseBody> response = syncRemoteNotes(new ArrayList<Note>());
             HashMap<String, Note> mergedNotes = notesRepository.notes;
-
-            Response<NotesResponseBody> response = notesRepository.syncNotes(new ArrayList<Note>());
             if (response != null && response.body() != null) {
                 List<Note> remoteNotes = response.body().notes;
                 for (Note remoteNote : remoteNotes) {
@@ -225,20 +246,19 @@ class NotesRepository {
                     }
                 }
                 List<Note> mergedNoteList = new ArrayList<>(mergedNotes.values());
-                notesRepository.notesDao.syncNotes(mergedNoteList);
-                notesRepository.syncNotes(mergedNoteList);
+                response = syncRemoteNotes(mergedNoteList);
+                if (response != null) {
+                    notesRepository.notesDao.syncNotes(mergedNoteList);
+                }
             }
-
-            return mergedNotes;
+            return response == null ? null : mergedNotes;
         }
 
         @Override
         protected void onPostExecute(@Nullable HashMap<String, Note> mergedNotes) {
             if (mergedNotes != null) {
                 notesRepository.notes = mergedNotes;
-                notesRepository.notifyOnSynchronized();
-            } else {
-                notesRepository.notifyOnError();
+                notesRepository.notifyOnSynchronizedWithNetwork();
             }
         }
     }
