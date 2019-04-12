@@ -1,14 +1,11 @@
 package com.example.notes;
 
-import android.app.Application;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -22,17 +19,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 /**
  * Содержит операции над хранилищем заметок
  */
-class NotesRepository {
+public class NotesRepository {
 
     /**
      * Обрабатывает процесс обновления списка заметок
@@ -43,18 +40,15 @@ class NotesRepository {
         void onError();
     }
 
-    private interface NotesApi {
+    public interface NotesApi {
         @POST("/notes/sync")
         Call<NotesResponseBody> syncNotes(@NonNull @Body NotesRequestBody notesRequestBody);
     }
 
-    private static final String BASE_URL = "http://10.0.2.2:8080/";
     private static final String USER_NAME = "USER_NAME_V7";
     private static final String TAG = "NotesRepository";
     @NonNull
     private HashMap<String, Note> notes = new HashMap<>();
-    @Nullable
-    private volatile static NotesRepository instance;
     @NonNull
     private HashSet<NotesSynchronizedListener> notesSynchronizedListeners = new HashSet<>();
     @NonNull
@@ -64,32 +58,10 @@ class NotesRepository {
     @Nullable
     private MergeNotesTask lastMergeNotesTask;
 
-    @NonNull
-    static NotesRepository getInstance(@NonNull Application application) {
-        if (instance == null) {
-            synchronized (NotesRepository.class) {
-                if (instance == null) {
-                    instance = new NotesRepository(application);
-                }
-            }
-        }
-        return instance;
-    }
-
-    private NotesRepository(@NonNull Application application) {
-        notesApi = createNotesApi();
-        notesDao = new NotesDao(application);
-    }
-
-    private NotesApi createNotesApi() {
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(Date.class, new DateLongFormatTypeAdapter())
-                .create();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-        return retrofit.create(NotesApi.class);
+    @Inject
+    public NotesRepository(@NonNull NotesApi notesApi, @NonNull NotesDao notesDao) {
+        this.notesApi = notesApi;
+        this.notesDao = notesDao;
     }
 
     void addNotesSynchronizedListener(@NonNull NotesSynchronizedListener listener) {
@@ -190,7 +162,7 @@ class NotesRepository {
         notifyOnSynchronized();
     }
 
-    private static class DateLongFormatTypeAdapter extends TypeAdapter<Date> {
+    public static class DateLongFormatTypeAdapter extends TypeAdapter<Date> {
         @Override
         public void write(@NonNull JsonWriter out, @NonNull Date value) throws IOException {
             out.value(String.valueOf(value.getTime()));

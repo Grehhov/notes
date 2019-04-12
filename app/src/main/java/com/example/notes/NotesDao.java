@@ -1,7 +1,6 @@
 package com.example.notes;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
@@ -12,10 +11,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Предоставляет методы взаимодействия с базой данных SQLite
  */
-class NotesDao {
+public class NotesDao {
     static final String TABLE_NOTES = "notes";
 
     static final String COLUMN_GUID = "guid";
@@ -36,8 +37,9 @@ class NotesDao {
             COLUMN_DELETED
     };
 
-    NotesDao(@NonNull Context context) {
-        dbHelper = new NotesSqliteHelper(context);
+    @Inject
+    NotesDao(@NonNull NotesSqliteHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     private void open() {

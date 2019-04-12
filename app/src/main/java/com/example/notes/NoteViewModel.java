@@ -1,17 +1,18 @@
 package com.example.notes;
 
-import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import javax.inject.Inject;
+
 /**
  * Управляет заметкой
  */
-public class NoteViewModel extends AndroidViewModel implements NotesRepository.NotesSynchronizedListener {
+public class NoteViewModel extends ViewModel implements NotesRepository.NotesSynchronizedListener {
     private static final String TAG = "NoteViewModel";
     @NonNull
     private final NotesRepository notesRepository;
@@ -22,10 +23,10 @@ public class NoteViewModel extends AndroidViewModel implements NotesRepository.N
     @NonNull
     private final MutableLiveData<Boolean> exitOnSync = new MutableLiveData<>();
 
-    public NoteViewModel(Application application) {
-        super(application);
-        this.notesRepository = NotesRepository.getInstance(application);
-        this.notesRepository.addNotesSynchronizedListener(this);
+    @Inject
+    public NoteViewModel(@NonNull NotesRepository repository) {
+        notesRepository = repository;
+        notesRepository.addNotesSynchronizedListener(this);
     }
 
     void setGuid(@Nullable String guid) {

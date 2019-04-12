@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SearchView;
 
+import javax.inject.Inject;
+
 /**
  * Управляет нижним окном фильтра и сортировки
  */
@@ -20,6 +22,8 @@ public class OptionsFragment extends Fragment {
     @Nullable
     private SearchView searchView;
     private NotesViewModel notesViewModel;
+    @Inject
+    CustomViewModelFactory customViewModelFactory;
 
     @NonNull
     public static OptionsFragment newInstance() {
@@ -27,9 +31,10 @@ public class OptionsFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
+        ((App) requireActivity().getApplication()).getComponent().inject(this);
+        notesViewModel = ViewModelProviders.of(requireActivity(), customViewModelFactory).get(NotesViewModel.class);
     }
 
     @Override

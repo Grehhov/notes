@@ -20,6 +20,8 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import javax.inject.Inject;
+
 import static android.app.Activity.RESULT_OK;
 
 /**
@@ -35,6 +37,8 @@ public class NoteFragment extends Fragment {
     private EditText descriptionEditView;
     private ProgressBar progressBar;
     private TextView errorTextView;
+    @Inject
+    CustomViewModelFactory customViewModelFactory;
 
     @NonNull
     public static NoteFragment newInstance() {
@@ -53,7 +57,8 @@ public class NoteFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
+        ((App) requireActivity().getApplication()).getComponent().inject(this);
+        noteViewModel = ViewModelProviders.of(this, customViewModelFactory).get(NoteViewModel.class);
         if (getArguments() != null) {
             guid = getArguments().getString(BUNDLE_NOTE_GUID);
         }

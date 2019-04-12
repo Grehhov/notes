@@ -25,6 +25,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import static android.app.Activity.RESULT_OK;
 
 /**
@@ -56,6 +58,8 @@ public class NotesFragment extends Fragment
     private TextView errorTextView;
     @Nullable
     private TextView emptyTextView;
+    @Inject
+    CustomViewModelFactory customViewModelFactory;
 
     @NonNull
     public static NotesFragment newInstance() {
@@ -85,8 +89,8 @@ public class NotesFragment extends Fragment
                     .add(R.id.notes_fragment_options_container, optionsFragment)
                     .commit();
         }
-
-        notesViewModel = ViewModelProviders.of(requireActivity()).get(NotesViewModel.class);
+        ((App) requireActivity().getApplication()).getComponent().inject(this);
+        notesViewModel = ViewModelProviders.of(requireActivity(), customViewModelFactory).get(NotesViewModel.class);
         noteAdapter = new NoteAdapter(requireActivity(), new ArrayList<Note>(), this);
         notesViewModel.getNotes().observe(requireActivity(), new Observer<List<Note>>() {
             @Override

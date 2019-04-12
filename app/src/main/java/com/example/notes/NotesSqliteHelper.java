@@ -3,6 +3,9 @@ package com.example.notes;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
+
+import javax.inject.Inject;
 
 
 public class NotesSqliteHelper extends SQLiteOpenHelper {
@@ -18,7 +21,8 @@ public class NotesSqliteHelper extends SQLiteOpenHelper {
 
     private static final String SQL_DROP_TABLE_NOTES = "drop table if exists " + NotesDao.TABLE_NOTES;
 
-    NotesSqliteHelper(Context context) {
+    @Inject
+    NotesSqliteHelper(@NonNull Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
