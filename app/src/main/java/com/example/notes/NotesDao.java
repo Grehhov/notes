@@ -27,7 +27,7 @@ public class NotesDao {
     static final String COLUMN_LAST_UPDATE = "last_update";
     static final String COLUMN_DELETED = "deleted";
 
-    private SQLiteDatabase database;
+    private final SQLiteDatabase database;
     @NonNull
     private final String[] allColumns = {
             COLUMN_GUID,
