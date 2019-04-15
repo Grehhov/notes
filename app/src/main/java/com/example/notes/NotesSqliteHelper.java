@@ -6,8 +6,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-
+@Singleton
 public class NotesSqliteHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "notes.db";
     private static final int DATABASE_VERSION = 1;

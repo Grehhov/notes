@@ -12,10 +12,12 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Предоставляет методы взаимодействия с базой данных SQLite
  */
+@Singleton
 public class NotesDao {
     static final String TABLE_NOTES = "notes";
 
@@ -27,8 +29,6 @@ public class NotesDao {
 
     private SQLiteDatabase database;
     @NonNull
-    private final NotesSqliteHelper dbHelper;
-    @NonNull
     private final String[] allColumns = {
             COLUMN_GUID,
             COLUMN_NAME,
@@ -39,21 +39,12 @@ public class NotesDao {
 
     @Inject
     NotesDao(@NonNull NotesSqliteHelper dbHelper) {
-        this.dbHelper = dbHelper;
-    }
-
-    private void open() {
         database = dbHelper.getWritableDatabase();
-    }
-
-    private void close() {
-        database.close();
     }
 
     @NonNull
     @WorkerThread
     List<Note> getAllNotes() {
-        open();
         List<Note> notes = new ArrayList<>();
         Cursor cursor = null;
         try {
@@ -80,7 +71,6 @@ public class NotesDao {
             if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
             }
-            close();
         }
         return notes;
     }
@@ -88,7 +78,6 @@ public class NotesDao {
     @Nullable
     @WorkerThread
     private Note getNote(String guid) {
-        open();
         Note note = null;
         String selection = COLUMN_GUID + "=?";
         String[] selectionArgs = {guid};
@@ -113,7 +102,6 @@ public class NotesDao {
             if (cursor != null && !cursor.isClosed()) {
                 cursor.close();
             }
-            close();
         }
 
         return note;
@@ -122,25 +110,19 @@ public class NotesDao {
     @Nullable
     @WorkerThread
     Note addNote(@NonNull Note note) {
-        open();
         ContentValues values = new ContentValues();
         values.put(COLUMN_GUID, note.getGuid());
         values.put(COLUMN_NAME, note.getName());
         values.put(COLUMN_DESCRIPTION, note.getDescription());
         values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
         values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
-        try {
-            database.insert(TABLE_NOTES, null, values);
-            return getNote(note.getGuid());
-        } finally {
-            close();
-        }
+        database.insert(TABLE_NOTES, null, values);
+        return getNote(note.getGuid());
     }
 
     @Nullable
     @WorkerThread
     Note updateNote(@NonNull Note note) {
-        open();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME, note.getName());
         values.put(COLUMN_DESCRIPTION, note.getDescription());
@@ -148,18 +130,13 @@ public class NotesDao {
         values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
         String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
-        try {
-            database.update(TABLE_NOTES, values, selection, whereArgs);
-            return getNote(note.getGuid());
-        } finally {
-            close();
-        }
+        database.update(TABLE_NOTES, values, selection, whereArgs);
+        return getNote(note.getGuid());
     }
 
     @Nullable
     @WorkerThread
     Note deleteNote(@NonNull Note note) {
-        open();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME, note.getName());
         values.put(COLUMN_DESCRIPTION, note.getDescription());
@@ -167,17 +144,12 @@ public class NotesDao {
         values.put(COLUMN_DELETED, 1);
         String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
-        try {
-            database.update(TABLE_NOTES, values, selection, whereArgs);
-            return getNote(note.getGuid());
-        } finally {
-            close();
-        }
+        database.update(TABLE_NOTES, values, selection, whereArgs);
+        return getNote(note.getGuid());
     }
 
     @WorkerThread
     void syncNotes(@NonNull List<Note> notes) {
-        open();
         database.beginTransaction();
         try {
             for (Note note : notes) {
@@ -193,7 +165,6 @@ public class NotesDao {
             database.setTransactionSuccessful();
         } finally {
             database.endTransaction();
-            close();
         }
     }
 }

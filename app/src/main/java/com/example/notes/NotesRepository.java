@@ -19,8 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
-
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.http.Body;
@@ -58,7 +56,6 @@ public class NotesRepository {
     @Nullable
     private MergeNotesTask lastMergeNotesTask;
 
-    @Inject
     public NotesRepository(@NonNull NotesApi notesApi, @NonNull NotesDao notesDao) {
         this.notesApi = notesApi;
         this.notesDao = notesDao;
