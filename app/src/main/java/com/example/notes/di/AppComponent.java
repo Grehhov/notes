@@ -1,8 +1,8 @@
 package com.example.notes.di;
 
-import com.example.notes.NoteFragment;
-import com.example.notes.NotesFragment;
-import com.example.notes.OptionsFragment;
+import com.example.notes.presentation.NoteFragment;
+import com.example.notes.presentation.NotesFragment;
+import com.example.notes.presentation.OptionsFragment;
 
 import javax.inject.Singleton;
 

@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.domain;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,11 +26,11 @@ public class Note implements Cloneable {
     @SerializedName("deleted")
     private boolean deleted;
 
-    Note() {
+    public Note() {
         this.lastUpdate = new Date();
     }
 
-    Note(@Nullable String guid, @NonNull String name, @Nullable String description) {
+    public Note(@Nullable String guid, @NonNull String name, @Nullable String description) {
         this.guid = guid;
         this.name = name;
         this.description = description;
@@ -38,55 +38,55 @@ public class Note implements Cloneable {
     }
 
     @Nullable
-    String getGuid() {
+    public String getGuid() {
         return guid;
     }
 
     @Nullable
-    String getName() {
+    public String getName() {
         return name;
     }
 
     @Nullable
-    String getDescription() {
+    public String getDescription() {
         return description;
     }
 
     @NonNull
-    Date getLastUpdate() {
+    public Date getLastUpdate() {
         return lastUpdate;
     }
 
-    void setGuid(@Nullable String guid) {
+    public void setGuid(@Nullable String guid) {
         this.guid = guid;
     }
 
-    void setName(@NonNull String name) {
+    public void setName(@NonNull String name) {
         this.name = name;
         this.lastUpdate = new Date();
     }
 
-    void setDescription(@Nullable String description) {
+    public void setDescription(@Nullable String description) {
         this.description = description;
         this.lastUpdate = new Date();
     }
 
-    void setLastUpdate(@NonNull Date lastUpdate) {
+    public void setLastUpdate(@NonNull Date lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 
-    boolean isDeleted() {
+    public boolean isDeleted() {
         return deleted;
     }
 
-    void delete() {
+    public void delete() {
         deleted = true;
         lastUpdate = new Date();
     }
 
     @NonNull
     @Override
-    protected Note clone() throws CloneNotSupportedException {
+    public Note clone() throws CloneNotSupportedException {
         return (Note) super.clone();
     }
 }

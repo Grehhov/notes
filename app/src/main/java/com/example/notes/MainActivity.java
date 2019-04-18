@@ -6,6 +6,10 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.example.notes.presentation.NoteFragment;
+import com.example.notes.presentation.NotesFragment;
+import com.example.notes.presentation.OnBackPressedListener;
+
 /**
  * Запускает фрагмент со списком заметок
  */

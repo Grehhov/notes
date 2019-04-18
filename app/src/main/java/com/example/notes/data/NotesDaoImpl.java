@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+
+import com.example.notes.domain.Note;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,7 +20,7 @@ import javax.inject.Singleton;
  * Предоставляет методы взаимодействия с базой данных SQLite
  */
 @Singleton
-public class NotesDao {
+public class NotesDaoImpl implements NotesDao {
     static final String TABLE_NOTES = "notes";
 
     static final String COLUMN_GUID = "guid";
@@ -38,13 +40,13 @@ public class NotesDao {
     };
 
     @Inject
-    NotesDao(@NonNull NotesSqliteHelper dbHelper) {
+    NotesDaoImpl(@NonNull NotesSqliteHelper dbHelper) {
         database = dbHelper.getWritableDatabase();
     }
 
     @NonNull
     @WorkerThread
-    List<Note> getAllNotes() {
+    public List<Note> getAllNotes() {
         List<Note> notes = new ArrayList<>();
         Cursor cursor = null;
         try {
@@ -77,7 +79,7 @@ public class NotesDao {
 
     @Nullable
     @WorkerThread
-    private Note getNote(String guid) {
+    public Note getNote(@NonNull String guid) {
         Note note = null;
         String selection = COLUMN_GUID + "=?";
         String[] selectionArgs = {guid};
@@ -109,7 +111,7 @@ public class NotesDao {
 
     @Nullable
     @WorkerThread
-    Note addNote(@NonNull Note note) {
+    public Note addNote(@NonNull Note note) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_GUID, note.getGuid());
         values.put(COLUMN_NAME, note.getName());
@@ -117,12 +119,12 @@ public class NotesDao {
         values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
         values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
         database.insert(TABLE_NOTES, null, values);
-        return getNote(note.getGuid());
+        return note.getGuid() == null ? null :getNote(note.getGuid());
     }
 
     @Nullable
     @WorkerThread
-    Note updateNote(@NonNull Note note) {
+    public Note updateNote(@NonNull Note note) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME, note.getName());
         values.put(COLUMN_DESCRIPTION, note.getDescription());
@@ -131,12 +133,12 @@ public class NotesDao {
         String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         database.update(TABLE_NOTES, values, selection, whereArgs);
-        return getNote(note.getGuid());
+        return note.getGuid() == null ? null :getNote(note.getGuid());
     }
 
     @Nullable
     @WorkerThread
-    Note deleteNote(@NonNull Note note) {
+    public Note deleteNote(@NonNull Note note) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME, note.getName());
         values.put(COLUMN_DESCRIPTION, note.getDescription());
@@ -145,11 +147,11 @@ public class NotesDao {
         String selection = COLUMN_GUID + "=?";
         String[] whereArgs = {note.getGuid()};
         database.update(TABLE_NOTES, values, selection, whereArgs);
-        return getNote(note.getGuid());
+        return note.getGuid() == null ? null :getNote(note.getGuid());
     }
 
     @WorkerThread
-    void syncNotes(@NonNull List<Note> notes) {
+    public void syncNotes(@NonNull List<Note> notes) {
         database.beginTransaction();
         try {
             for (Note note : notes) {
@@ -159,8 +161,7 @@ public class NotesDao {
                 values.put(COLUMN_DESCRIPTION, note.getDescription());
                 values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
                 values.put(COLUMN_DELETED, note.isDeleted() ? 1 : 0);
-                database.insertWithOnConflict(
-                        TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                database.insertWithOnConflict(TABLE_NOTES, null, values, SQLiteDatabase.CONFLICT_REPLACE);
             }
             database.setTransactionSuccessful();
         } finally {

@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.graphics.Canvas;
 import android.support.annotation.NonNull;

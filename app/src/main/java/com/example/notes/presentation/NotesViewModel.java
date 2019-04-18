@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -7,19 +7,23 @@ import android.support.annotation.NonNull;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import com.example.notes.domain.NotesInteractor;
+import com.example.notes.domain.Note;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Inject;
 
+import io.reactivex.disposables.CompositeDisposable;
+
 /**
  * Управляет списком заметок
  */
-public class NotesViewModel extends ViewModel implements Filterable, NotesRepository.NotesSynchronizedListener {
+public class NotesViewModel extends ViewModel implements Filterable {
     @NonNull
-    private final NotesRepository notesRepository;
+    private final NotesInteractor notesInteractor;
     @NonNull
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>();
     @NonNull
@@ -31,19 +35,29 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     @NonNull
     private CharSequence lastQuery = "";
     private boolean isAscendingLastUpdate;
+    @NonNull
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Inject
-    public NotesViewModel(@NonNull NotesRepository repository) {
-        notesRepository = repository;
-        notesRepository.addNotesSynchronizedListener(this);
+    NotesViewModel(@NonNull NotesInteractor notesInteractor) {
+        this.notesInteractor = notesInteractor;
         isRefreshing.setValue(true);
-        notesRepository.loadNotes();
+        compositeDisposable.add(notesInteractor.changeNotes()
+                .subscribe(newNotes -> {
+                    filter(lastQuery);
+                    isRefreshing.postValue(false);
+                }, throwable -> {
+                    notes.postValue(null);
+                    isRefreshing.postValue(false);
+                }));
+        compositeDisposable.add(notesInteractor.getSyncNotes()
+                .subscribe(isSync -> isSynchronizedWithNetwork.postValue(true)));
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
-        notesRepository.removeNotesSynchronizedListener(this);
+        compositeDisposable.dispose();
     }
 
     @NonNull
@@ -65,30 +79,19 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         if (notes.getValue() != null) {
             Note note = notes.getValue().get(position);
             isRefreshing.setValue(true);
-            notesRepository.deleteNote(note);
+            compositeDisposable.add(notesInteractor.deleteNote(note)
+                    .subscribe(localNote -> {
+                        filter(lastQuery);
+                        isRefreshing.postValue(false);
+                    }, throwable -> {
+                        notes.postValue(null);
+                        isRefreshing.postValue(false);
+                    }));
         }
-    }
-
-    @Override
-    public void onSynchronized() {
-        filter(lastQuery);
-        isRefreshing.setValue(false);
-    }
-
-    @Override
-    public void onSynchronizedWithNetwork() {
-        filter(lastQuery);
-        isSynchronizedWithNetwork.setValue(true);
     }
 
     void syncWithNetworkIsProcessed() {
         isSynchronizedWithNetwork.setValue(null);
-    }
-
-    @Override
-    public void onError() {
-        notes.setValue(null);
-        isRefreshing.setValue(false);
     }
 
     @Override
@@ -104,7 +107,7 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
     @NonNull
     private List<Note> getActualNotes() {
         List<Note> actualNotes = new ArrayList<>();
-        for (Note note : notesRepository.getNotes()) {
+        for (Note note : notesInteractor.getNotes()) {
             if (!note.isDeleted()) {
                 actualNotes.add(note);
             }
@@ -129,12 +132,9 @@ public class NotesViewModel extends ViewModel implements Filterable, NotesReposi
         isAscendingLastUpdate = isAscending;
         List<Note> notes = this.notes.getValue();
         if (notes != null) {
-            Collections.sort(notes, new Comparator<Note>() {
-                @Override
-                public int compare(@NonNull Note a, @NonNull Note b) {
-                    int resultCompare = a.getLastUpdate().compareTo(b.getLastUpdate());
-                    return isAscending ? resultCompare : -1 * resultCompare;
-                }
+            Collections.sort(notes, (a, b) -> {
+                int resultCompare = a.getLastUpdate().compareTo(b.getLastUpdate());
+                return isAscending ? resultCompare : -1 * resultCompare;
             });
             this.notes.setValue(notes);
         }

@@ -3,8 +3,8 @@ package com.example.notes.di;
 import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 
-import com.example.notes.NoteViewModel;
-import com.example.notes.NotesViewModel;
+import com.example.notes.presentation.NoteViewModel;
+import com.example.notes.presentation.NotesViewModel;
 
 import dagger.Binds;
 import dagger.Module;

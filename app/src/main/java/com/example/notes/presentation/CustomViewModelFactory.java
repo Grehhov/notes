@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;

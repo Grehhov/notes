@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -8,6 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.example.notes.R;
+import com.example.notes.domain.Note;
 
 import java.text.SimpleDateFormat;
 import java.util.List;

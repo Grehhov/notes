@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
@@ -12,7 +12,7 @@ public class NotesItemDecoration extends RecyclerView.ItemDecoration {
 
     private final int sizeDivider;
 
-    public NotesItemDecoration(int sizeDivider) {
+    NotesItemDecoration(int sizeDivider) {
         this.sizeDivider = sizeDivider;
     }
 

@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
@@ -11,7 +11,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SearchView;
 
+import com.example.notes.App;
+import com.example.notes.R;
+
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.disposables.Disposable;
 
 /**
  * Управляет нижним окном фильтра и сортировки
@@ -24,6 +33,7 @@ public class OptionsFragment extends Fragment {
     private NotesViewModel notesViewModel;
     @Inject
     CustomViewModelFactory customViewModelFactory;
+    private Disposable searchDisposable;
 
     @NonNull
     public static OptionsFragment newInstance() {
@@ -55,37 +65,41 @@ public class OptionsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (searchView != null) {
-            searchView.setOnQueryTextListener(getQueryTextListener());
+            searchDisposable = Observable.create((ObservableOnSubscribe<String>) emitter ->
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override
+                        public boolean onQueryTextSubmit(@NonNull String query) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(@NonNull String newText) {
+                            emitter.onNext(newText);
+                            return true;
+                        }
+                    }))
+                    .debounce(300, TimeUnit.MILLISECONDS)
+                    .distinctUntilChanged()
+                    .subscribe(notesViewModel::filter);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (searchDisposable != null) {
+            searchDisposable.dispose();
         }
     }
 
     @NonNull
-    SearchView.OnQueryTextListener getQueryTextListener() {
-        return new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(@NonNull String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(@NonNull String newText) {
-                notesViewModel.filter(newText);
-                return true;
-            }
-        };
-    }
-
-    @NonNull
     View.OnClickListener getSortButtonClickListener(@NonNull final Button button) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(@NonNull View view) {
-                String arrow;
-                arrow = isAscendingLastUpdate ? "↓" : "↑";
-                notesViewModel.sortByLastUpdate(isAscendingLastUpdate);
-                isAscendingLastUpdate = !isAscendingLastUpdate;
-                button.setText(changeArrow(button.getText().toString(), arrow));
-            }
+        return view -> {
+            String arrow;
+            arrow = isAscendingLastUpdate ? "↓" : "↑";
+            notesViewModel.sortByLastUpdate(isAscendingLastUpdate);
+            isAscendingLastUpdate = !isAscendingLastUpdate;
+            button.setText(changeArrow(button.getText().toString(), arrow));
         };
     }
 

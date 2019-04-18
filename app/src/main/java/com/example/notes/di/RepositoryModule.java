@@ -2,8 +2,12 @@ package com.example.notes.di;
 
 import android.support.annotation.NonNull;
 
-import com.example.notes.NotesDao;
-import com.example.notes.NotesRepository;
+import com.example.notes.data.LocalRepositoryImpl;
+import com.example.notes.data.NotesDaoImpl;
+import com.example.notes.domain.DateLongFormatTypeAdapter;
+import com.example.notes.domain.NotesInteractor;
+import com.example.notes.data.NotesApi;
+import com.example.notes.data.RemoteRepositoryImpl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -14,6 +18,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 @Module
@@ -23,20 +28,37 @@ class RepositoryModule {
     @Provides
     @NonNull
     @Singleton
-    NotesRepository provideRepository(@NonNull NotesRepository.NotesApi notesApi, @NonNull NotesDao notesDao) {
-        return new NotesRepository(notesApi, notesDao);
+    NotesInteractor provideNotesInteractor(@NonNull LocalRepositoryImpl localRepositoryImpl,
+                                      @NonNull RemoteRepositoryImpl remoteRepositoryImpl) {
+        return new NotesInteractor(localRepositoryImpl, remoteRepositoryImpl);
     }
 
     @Provides
     @NonNull
-    NotesRepository.NotesApi provideNotesApi() {
+    @Singleton
+    LocalRepositoryImpl provideLocalRepository(@NonNull NotesDaoImpl notesDaoImpl) {
+        return new LocalRepositoryImpl(notesDaoImpl);
+    }
+
+    @Provides
+    @NonNull
+    @Singleton
+    RemoteRepositoryImpl provideRemoteRepository(@NonNull NotesApi notesApi) {
+        return new RemoteRepositoryImpl(notesApi);
+    }
+
+
+    @Provides
+    @NonNull
+    NotesApi provideNotesApi() {
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(Date.class, new NotesRepository.DateLongFormatTypeAdapter())
+                .registerTypeAdapter(Date.class, new DateLongFormatTypeAdapter())
                 .create();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
-        return retrofit.create(NotesRepository.NotesApi.class);
+        return retrofit.create(NotesApi.class);
     }
 }

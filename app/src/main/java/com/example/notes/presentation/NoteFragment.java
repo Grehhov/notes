@@ -1,4 +1,4 @@
-package com.example.notes;
+package com.example.notes.presentation;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -19,6 +19,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.example.notes.App;
+import com.example.notes.MainActivity;
+import com.example.notes.R;
+import com.example.notes.domain.Note;
 
 import javax.inject.Inject;
 
