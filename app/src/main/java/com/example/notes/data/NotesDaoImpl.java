@@ -138,16 +138,13 @@ public class NotesDaoImpl implements NotesDao {
 
     @Nullable
     @WorkerThread
-    public Note deleteNote(@NonNull Note note) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME, note.getName());
-        values.put(COLUMN_DESCRIPTION, note.getDescription());
-        values.put(COLUMN_LAST_UPDATE, note.getLastUpdate().getTime());
-        values.put(COLUMN_DELETED, 1);
-        String selection = COLUMN_GUID + "=?";
-        String[] whereArgs = {note.getGuid()};
-        database.update(TABLE_NOTES, values, selection, whereArgs);
-        return note.getGuid() == null ? null :getNote(note.getGuid());
+    public Note deleteNote(@NonNull String guid) {
+        Note note = getNote(guid);
+        if (note != null) {
+            note.delete();
+            return updateNote(note);
+        }
+        return null;
     }
 
     @WorkerThread

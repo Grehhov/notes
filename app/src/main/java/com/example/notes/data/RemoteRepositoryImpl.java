@@ -7,7 +7,7 @@ import com.example.notes.domain.RemoteRepository;
 
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 
 public class RemoteRepositoryImpl implements RemoteRepository {
@@ -20,10 +20,10 @@ public class RemoteRepositoryImpl implements RemoteRepository {
     }
 
     @NonNull
-    public Observable<Note> syncNotes(@NonNull List<Note> notes) {
+    public Single<List<Note>> syncNotes(@NonNull List<Note> notes) {
         NotesApi.NotesRequestBody notesRequestBody = new NotesApi.NotesRequestBody(0, USER_NAME, notes);
         return notesApi.syncNotes(notesRequestBody)
-                .flatMap(notesResponseBody -> Observable.fromIterable(notesResponseBody.notes))
+                .flatMap(notesResponseBody -> Single.just(notesResponseBody.notes))
                 .subscribeOn(Schedulers.io());
     }
 }

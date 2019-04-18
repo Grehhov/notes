@@ -27,8 +27,6 @@ public class NotesInteractor {
     @NonNull
     private final RemoteRepository remoteRepository;
     @NonNull
-    private HashMap<String, Note> notes = new HashMap<>();
-    @NonNull
     private final PublishSubject<List<Note>> notesSubject = PublishSubject.create();
     @NonNull
     private final PublishSubject<Boolean> syncSubject = PublishSubject.create();
@@ -36,11 +34,21 @@ public class NotesInteractor {
     public NotesInteractor(@NonNull LocalRepository localRepository, @NonNull RemoteRepository remoteRepository) {
         this.localRepository = localRepository;
         this.remoteRepository = remoteRepository;
+        updateNotes();
+    }
+
+    @NonNull
+    public Single<Note> getNote(@NonNull String guid) {
+        return localRepository.getNote(guid);
+    }
+
+    private void updateNotes() {
         localRepository.getAllNotes()
                 .subscribe(new DisposableSingleObserver<List<Note>>() {
                     @Override
                     public void onSuccess(@NonNull List<Note> notes) {
-                        updateNotes(notes);
+                        notesSubject.onNext(notes);
+                        syncNotes(notes);
                         dispose();
                     }
 
@@ -52,51 +60,26 @@ public class NotesInteractor {
     }
 
     @NonNull
-    public List<Note> getNotes() {
-        return new ArrayList<>(notes.values());
-    }
-
-    @NonNull
-    public Single<Note> getNote(@NonNull String guid) {
-        return localRepository.getNote(guid);
-    }
-
-    private void updateNotes(@NonNull List<Note> newNotes) {
-        notes = new HashMap<>();
-        for (Note note : newNotes) {
-            notes.put(note.getGuid(), note);
-        }
-        notesSubject.onNext(getNotes());
-        syncNotes();
-    }
-
-    private void updateNotes(@NonNull Note note) {
-        notes.put(note.getGuid(), note);
-        notesSubject.onNext(getNotes());
-        syncNotes();
-    }
-
-    @NonNull
     public Single<Note> updateNote(@NonNull Note note) {
         return localRepository.updateNote(note)
-                .doOnSuccess(this::updateNotes);
+                .doOnSuccess(localNote -> updateNotes());
     }
 
     @NonNull
     public Single<Note> addNote(@NonNull Note note) {
         note.setGuid(UUID.randomUUID().toString());
         return localRepository.addNote(note)
-                .doOnSuccess(this::updateNotes);
+                .doOnSuccess(localNote -> updateNotes());
     }
 
     @NonNull
-    public Single<Note> deleteNote(@NonNull Note note) {
-        return localRepository.deleteNote(note)
-                .doOnSuccess(this::updateNotes);
+    public Single<Note> deleteNote(@NonNull String guid) {
+        return localRepository.deleteNote(guid)
+                .doOnSuccess(localNote -> updateNotes());
     }
 
     @NonNull
-    public Observable<List<Note>> changeNotes() {
+    public Observable<List<Note>> getNotes() {
         return notesSubject;
     }
 
@@ -105,23 +88,29 @@ public class NotesInteractor {
         return syncSubject;
     }
 
-    private void syncNotes() {
+    private void syncNotes(@NonNull List<Note> localNotes) {
         if (lastSyncNotes != null && !lastSyncNotes.isDisposed()) {
             lastSyncNotes.dispose();
         }
+        HashMap<String, Note> notes = new HashMap<>();
+        for (Note note : localNotes) {
+            notes.put(note.getGuid(), note);
+        }
         lastSyncNotes = remoteRepository.syncNotes(new ArrayList<>())
-                .filter(this::isNeedUpdate)
+                .flatMapObservable(Observable::fromIterable)
+                .filter(remoteNotes -> isNeedUpdate(notes, remoteNotes))
                 .doOnNext(note -> notes.put(note.getGuid(), note))
                 .ignoreElements()
-                .andThen(remoteRepository.syncNotes(getNotes()).ignoreElements()
-                        .mergeWith(localRepository.syncNotes(getNotes())))
+                .andThen(remoteRepository.syncNotes(new ArrayList<>(notes.values()))
+                        .ignoreElement()
+                        .mergeWith(localRepository.syncNotes(new ArrayList<>(notes.values()))))
                 .subscribe(() -> {
-                    notesSubject.onNext(getNotes());
+                    notesSubject.onNext(new ArrayList<>(notes.values()));
                     syncSubject.onNext(true);
                 }, throwable -> Log.e(TAG, throwable.getMessage(), throwable));
     }
 
-    private boolean isNeedUpdate(@NonNull Note remoteNote) {
+    private boolean isNeedUpdate(@NonNull HashMap<String, Note> notes, @NonNull Note remoteNote) {
         String guid = remoteNote.getGuid();
         boolean keyIsContains = notes.containsKey(guid);
         boolean isFreshest = false;

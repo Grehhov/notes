@@ -4,9 +4,9 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public interface RemoteRepository {
     @NonNull
-    Observable<Note> syncNotes(@NonNull List<Note> notes);
+    Single<List<Note>> syncNotes(@NonNull List<Note> notes);
 }

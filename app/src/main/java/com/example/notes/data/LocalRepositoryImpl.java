@@ -44,8 +44,8 @@ public class LocalRepositoryImpl implements LocalRepository {
     }
 
     @NonNull
-    public Single<Note> deleteNote(@NonNull Note note) {
-        return Single.fromCallable(() -> notesDao.deleteNote(note))
+    public Single<Note> deleteNote(@NonNull String guid) {
+        return Single.fromCallable(() -> notesDao.deleteNote(guid))
                 .subscribeOn(Schedulers.io());
     }
 

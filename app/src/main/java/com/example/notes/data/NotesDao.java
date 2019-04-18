@@ -27,7 +27,7 @@ interface NotesDao {
 
     @Nullable
     @WorkerThread
-    Note deleteNote(@NonNull Note note);
+    Note deleteNote(@NonNull String guid);
 
     @WorkerThread
     void syncNotes(@NonNull List<Note> notes);

@@ -2,7 +2,6 @@ package com.example.notes.presentation;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -12,13 +11,12 @@ import com.example.notes.domain.Note;
 
 import javax.inject.Inject;
 
-import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableSingleObserver;
 
 /**
  * Управляет заметкой
  */
-public class NoteViewModel extends ViewModel {
+public class NoteViewModel extends BaseViewModel {
     private static final String TAG = "NoteViewModel";
     @NonNull
     private final NotesInteractor notesInteractor;
@@ -28,8 +26,6 @@ public class NoteViewModel extends ViewModel {
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
     private final MutableLiveData<Boolean> exitOnSync = new MutableLiveData<>();
-    @NonNull
-    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
     @NonNull
     private final DisposableSingleObserver<Note> disposableSingleObserver = new DisposableSingleObserver<Note>() {
         @Override
@@ -110,15 +106,8 @@ public class NoteViewModel extends ViewModel {
         Note noteValue = note.getValue();
         if (noteValue != null && noteValue.getGuid() != null) {
             isRefreshing.setValue(true);
-            compositeDisposable.add(notesInteractor.getNote(noteValue.getGuid())
-                    .flatMap(notesInteractor::deleteNote)
+            compositeDisposable.add(notesInteractor.deleteNote(noteValue.getGuid())
                     .subscribeWith(disposableSingleObserver));
         }
-    }
-
-    @Override
-    protected void onCleared() {
-        super.onCleared();
-        compositeDisposable.dispose();
     }
 }

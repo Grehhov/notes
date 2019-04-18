@@ -7,13 +7,14 @@ import com.example.notes.domain.Note;
 
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface NotesApi {
     @POST("/notes/sync")
-    Observable<NotesResponseBody> syncNotes(@NonNull @Body NotesRequestBody notesRequestBody);
+    @NonNull
+    Single<NotesResponseBody> syncNotes(@NonNull @Body NotesRequestBody notesRequestBody);
 
     class NotesRequestBody {
         public long version;

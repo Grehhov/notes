@@ -2,7 +2,6 @@ package com.example.notes.presentation;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
 import android.support.annotation.NonNull;
 import android.widget.Filter;
 import android.widget.Filterable;
@@ -16,16 +15,16 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import io.reactivex.disposables.CompositeDisposable;
-
 /**
  * Управляет списком заметок
  */
-public class NotesViewModel extends ViewModel implements Filterable {
+public class NotesViewModel extends BaseViewModel implements Filterable {
     @NonNull
     private final NotesInteractor notesInteractor;
     @NonNull
-    private final MutableLiveData<List<Note>> notes = new MutableLiveData<>();
+    private List<Note> notes = new ArrayList<>();
+    @NonNull
+    private final MutableLiveData<List<Note>> visibleNotes = new MutableLiveData<>();
     @NonNull
     private final MutableLiveData<Boolean> isRefreshing = new MutableLiveData<>();
     @NonNull
@@ -35,34 +34,27 @@ public class NotesViewModel extends ViewModel implements Filterable {
     @NonNull
     private CharSequence lastQuery = "";
     private boolean isAscendingLastUpdate;
-    @NonNull
-    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     @Inject
     NotesViewModel(@NonNull NotesInteractor notesInteractor) {
         this.notesInteractor = notesInteractor;
         isRefreshing.setValue(true);
-        compositeDisposable.add(notesInteractor.changeNotes()
+        compositeDisposable.add(notesInteractor.getNotes()
                 .subscribe(newNotes -> {
+                    notes = getActualNotes(newNotes);
                     filter(lastQuery);
                     isRefreshing.postValue(false);
                 }, throwable -> {
-                    notes.postValue(null);
+                    visibleNotes.postValue(null);
                     isRefreshing.postValue(false);
                 }));
         compositeDisposable.add(notesInteractor.getSyncNotes()
                 .subscribe(isSync -> isSynchronizedWithNetwork.postValue(true)));
     }
 
-    @Override
-    protected void onCleared() {
-        super.onCleared();
-        compositeDisposable.dispose();
-    }
-
     @NonNull
     LiveData<List<Note>> getNotes() {
-        return notes;
+        return visibleNotes;
     }
 
     @NonNull
@@ -76,17 +68,19 @@ public class NotesViewModel extends ViewModel implements Filterable {
     }
 
     void deleteNote(int position) {
-        if (notes.getValue() != null) {
-            Note note = notes.getValue().get(position);
-            isRefreshing.setValue(true);
-            compositeDisposable.add(notesInteractor.deleteNote(note)
-                    .subscribe(localNote -> {
-                        filter(lastQuery);
-                        isRefreshing.postValue(false);
-                    }, throwable -> {
-                        notes.postValue(null);
-                        isRefreshing.postValue(false);
-                    }));
+        if (visibleNotes.getValue() != null) {
+            Note note = visibleNotes.getValue().get(position);
+            if (note.getGuid() != null) {
+                isRefreshing.setValue(true);
+                compositeDisposable.add(notesInteractor.deleteNote(note.getGuid())
+                        .subscribe(localNote -> {
+                            filter(lastQuery);
+                            isRefreshing.postValue(false);
+                        }, throwable -> {
+                            visibleNotes.postValue(null);
+                            isRefreshing.postValue(false);
+                        }));
+            }
         }
     }
 
@@ -105,9 +99,9 @@ public class NotesViewModel extends ViewModel implements Filterable {
      * @return неудаленные заметки
      */
     @NonNull
-    private List<Note> getActualNotes() {
+    private List<Note> getActualNotes(@NonNull List<Note> notes) {
         List<Note> actualNotes = new ArrayList<>();
-        for (Note note : notesInteractor.getNotes()) {
+        for (Note note : notes) {
             if (!note.isDeleted()) {
                 actualNotes.add(note);
             }
@@ -130,13 +124,13 @@ public class NotesViewModel extends ViewModel implements Filterable {
      */
     void sortByLastUpdate(final boolean isAscending) {
         isAscendingLastUpdate = isAscending;
-        List<Note> notes = this.notes.getValue();
+        List<Note> notes = this.visibleNotes.getValue();
         if (notes != null) {
             Collections.sort(notes, (a, b) -> {
                 int resultCompare = a.getLastUpdate().compareTo(b.getLastUpdate());
                 return isAscending ? resultCompare : -1 * resultCompare;
             });
-            this.notes.setValue(notes);
+            this.visibleNotes.setValue(notes);
         }
     }
 
@@ -146,12 +140,11 @@ public class NotesViewModel extends ViewModel implements Filterable {
         protected FilterResults performFiltering(@NonNull CharSequence charSequence) {
             List<Note> visibleNotes;
             String query = charSequence.toString().toLowerCase();
-            List<Note> actualNotes = getActualNotes();
             if (query.isEmpty()) {
-                visibleNotes = actualNotes;
+                visibleNotes = notes;
             } else {
                 List<Note> filteredList = new ArrayList<>();
-                for (Note note : actualNotes) {
+                for (Note note : notes) {
                     String nameNote = note.getName();
                     String descriptionNote = note.getDescription();
                     if (nameNote != null && nameNote.toLowerCase().contains(query)
@@ -169,7 +162,7 @@ public class NotesViewModel extends ViewModel implements Filterable {
         @Override
         @SuppressWarnings("unchecked")
         protected void publishResults(@NonNull CharSequence charSequence, @NonNull FilterResults filterResults) {
-            notes.setValue((ArrayList<Note>) filterResults.values);
+            visibleNotes.setValue((ArrayList<Note>) filterResults.values);
             sortByLastUpdate(isAscendingLastUpdate);
         }
     }

@@ -8,6 +8,7 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public interface LocalRepository {
+    @NonNull
     Single<List<Note>> getAllNotes();
 
     @NonNull
@@ -20,7 +21,7 @@ public interface LocalRepository {
     Single<Note> updateNote(@NonNull Note note);
 
     @NonNull
-    Single<Note> deleteNote(@NonNull Note note);
+    Single<Note> deleteNote(@NonNull String guid);
 
     @NonNull
     Completable syncNotes(@NonNull List<Note> notes);
