@@ -40,7 +40,6 @@ public class MainActivityTest {
 
     @After
     public void unregisterIdlingResource() {
-        mActivityRule.finishActivity();
         IdlingRegistry.getInstance().unregister(EspressoIdlingResource.getIdlingResource());
     }
 
@@ -69,7 +68,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void C_test() {
+    public void C_editNote_isCorrectly() {
         onView(withId(R.id.notes_recycler)).perform(actionOnItemAtPosition(0, click()));
         onView(withId(R.id.note_name_edit_text)).perform(clearText());
         onView(withId(R.id.note_name_edit_text)).perform(typeText("UpdateNote"));
@@ -82,7 +81,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void D_test() {
+    public void D_deleteNote_isCorrectly() {
         onView(withId(R.id.notes_recycler)).perform(actionOnItemAtPosition(0, click()));
         onView(withId(R.id.note_menu_delete)).perform(click());
         onView(withId(R.id.notes_recycler)).perform(actionOnItemAtPosition(0, click()));
@@ -90,7 +89,7 @@ public class MainActivityTest {
     }
 
     @Test
-    public void E_test() {
+    public void E_swipeNote_isCorrectly() {
         onView(withId(R.id.notes_recycler)).perform(actionOnItemAtPosition(0, swipeLeft()));
     }
 }

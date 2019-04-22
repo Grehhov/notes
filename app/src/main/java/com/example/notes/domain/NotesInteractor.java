@@ -13,7 +13,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.BehaviorSubject;
 
 /**
  * Содержит операции над хранилищами заметок
@@ -27,9 +27,9 @@ public class NotesInteractor {
     @NonNull
     private final RemoteRepository remoteRepository;
     @NonNull
-    private final PublishSubject<List<Note>> notesSubject = PublishSubject.create();
+    private final BehaviorSubject<List<Note>> notesSubject = BehaviorSubject.create();
     @NonNull
-    private final PublishSubject<Boolean> syncSubject = PublishSubject.create();
+    private final BehaviorSubject<Boolean> syncSubject = BehaviorSubject.create();
 
     public NotesInteractor(@NonNull LocalRepository localRepository, @NonNull RemoteRepository remoteRepository) {
         this.localRepository = localRepository;
