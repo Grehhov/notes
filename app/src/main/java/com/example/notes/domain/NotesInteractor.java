@@ -49,7 +49,6 @@ public class NotesInteractor {
                     public void onSuccess(@NonNull List<Note> notes) {
                         notesSubject.onNext(notes);
                         syncNotes(notes);
-                        dispose();
                     }
 
                     @Override
@@ -96,21 +95,25 @@ public class NotesInteractor {
         for (Note note : localNotes) {
             notes.put(note.getGuid(), note);
         }
+
         lastSyncNotes = remoteRepository.syncNotes(new ArrayList<>())
-                .flatMapObservable(Observable::fromIterable)
-                .filter(remoteNotes -> isNeedUpdate(notes, remoteNotes))
-                .doOnNext(note -> notes.put(note.getGuid(), note))
-                .ignoreElements()
-                .andThen(remoteRepository.syncNotes(new ArrayList<>(notes.values()))
-                        .ignoreElement()
-                        .mergeWith(localRepository.syncNotes(new ArrayList<>(notes.values()))))
+                .map(remoteNotes -> {
+                    for (Note note : remoteNotes) {
+                        if (isNeedUpdate(notes, note)) {
+                            notes.put(note.getGuid(), note);
+                        }
+                    }
+                    return new ArrayList<>(notes.values());
+                })
+                .flatMapCompletable(noteList -> remoteRepository.syncNotes(noteList).ignoreElement()
+                        .mergeWith(localRepository.syncNotes(noteList)))
                 .subscribe(() -> {
                     notesSubject.onNext(new ArrayList<>(notes.values()));
                     syncSubject.onNext(true);
                 }, throwable -> Log.e(TAG, throwable.getMessage(), throwable));
     }
 
-    private boolean isNeedUpdate(@NonNull HashMap<String, Note> notes, @NonNull Note remoteNote) {
+    public boolean isNeedUpdate(@NonNull HashMap<String, Note> notes, @NonNull Note remoteNote) {
         String guid = remoteNote.getGuid();
         boolean keyIsContains = notes.containsKey(guid);
         boolean isFreshest = false;

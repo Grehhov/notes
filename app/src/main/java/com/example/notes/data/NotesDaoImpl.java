@@ -40,7 +40,7 @@ public class NotesDaoImpl implements NotesDao {
     };
 
     @Inject
-    NotesDaoImpl(@NonNull NotesSqliteHelper dbHelper) {
+    public NotesDaoImpl(@NonNull NotesSqliteHelper dbHelper) {
         database = dbHelper.getWritableDatabase();
     }
 

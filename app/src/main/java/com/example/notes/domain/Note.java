@@ -89,4 +89,17 @@ public class Note implements Cloneable {
     public Note clone() throws CloneNotSupportedException {
         return (Note) super.clone();
     }
+
+    public boolean equals(@NonNull Object other) {
+        if (this == other)
+            return true;
+        if (!(other instanceof Note))
+            return false;
+        Note otherNote = (Note) other;
+        return (this.getGuid() != null && this.getGuid().equals(otherNote.getGuid())) &&
+                (this.getName() != null && this.getName().equals(otherNote.getName())) &&
+                (this.getDescription() != null && this.getDescription().equals(otherNote.getDescription())) &&
+                this.getLastUpdate().equals(otherNote.getLastUpdate()) &&
+                this.isDeleted() == otherNote.isDeleted();
+    }
 }

@@ -35,7 +35,7 @@ public interface NotesApi {
         @NonNull
         public List<Note> notes;
 
-        NotesResponseBody(long version, @NonNull List<Note> notes) {
+        public NotesResponseBody(long version, @NonNull List<Note> notes) {
             this.version = version;
             this.notes = notes;
         }

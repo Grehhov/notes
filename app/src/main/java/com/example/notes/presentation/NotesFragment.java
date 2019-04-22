@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.notes.App;
+import com.example.notes.utils.EspressoIdlingResource;
 import com.example.notes.R;
 import com.example.notes.domain.Note;
 
@@ -116,6 +117,11 @@ public class NotesFragment extends Fragment
             public void onChanged(@Nullable Boolean isRefreshing) {
                 if (isRefreshing != null && progressBar != null) {
                     progressBar.setVisibility(isRefreshing ? View.VISIBLE : View.GONE);
+                    if (isRefreshing) {
+                        EspressoIdlingResource.start();
+                    } else if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+                        EspressoIdlingResource.end();
+                    }
                 }
             }
         });
