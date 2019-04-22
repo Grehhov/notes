@@ -49,7 +49,6 @@ public class NotesInteractor {
                     public void onSuccess(@NonNull List<Note> notes) {
                         notesSubject.onNext(notes);
                         syncNotes(notes);
-                        dispose();
                     }
 
                     @Override
