@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -121,17 +123,17 @@ public class MainActivityTest {
     }
 
     private int getCountNotes() {
-        int[] count = {0};
+        AtomicInteger count = new AtomicInteger(0);
         Matcher matcher = new TypeSafeMatcher<View>() {
             @Override
             protected boolean matchesSafely(View item) {
-                count[0] = ((RecyclerView) item).getAdapter().getItemCount();
+                count.set(((RecyclerView) item).getAdapter().getItemCount());
                 return true;
             }
             @Override
             public void describeTo(Description description) {}
         };
         onView(withId(R.id.notes_recycler)).check(matches(matcher));
-        return count[0];
+        return count.get();
     }
 }

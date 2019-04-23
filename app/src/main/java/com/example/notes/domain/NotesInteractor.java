@@ -105,7 +105,8 @@ public class NotesInteractor {
                     }
                     return new ArrayList<>(notes.values());
                 })
-                .flatMapCompletable(noteList -> remoteRepository.syncNotes(noteList).ignoreElement()
+                .flatMapCompletable(noteList -> remoteRepository.syncNotes(noteList)
+                        .ignoreElement()
                         .mergeWith(localRepository.syncNotes(noteList)))
                 .subscribe(() -> {
                     notesSubject.onNext(new ArrayList<>(notes.values()));
