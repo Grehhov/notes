@@ -1,9 +1,7 @@
-package com.example.notes;
+package com.example.notes.domain;
 
 import com.example.notes.data.LocalRepositoryImpl;
 import com.example.notes.data.RemoteRepositoryImpl;
-import com.example.notes.domain.Note;
-import com.example.notes.domain.NotesInteractor;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -113,7 +113,7 @@ public class NotesInteractor {
                 }, throwable -> Log.e(TAG, throwable.getMessage(), throwable));
     }
 
-    public boolean isNeedUpdate(@NonNull HashMap<String, Note> notes, @NonNull Note remoteNote) {
+    boolean isNeedUpdate(@NonNull HashMap<String, Note> notes, @NonNull Note remoteNote) {
         String guid = remoteNote.getGuid();
         boolean keyIsContains = notes.containsKey(guid);
         boolean isFreshest = false;

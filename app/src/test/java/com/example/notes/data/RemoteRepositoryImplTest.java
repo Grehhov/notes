@@ -1,7 +1,5 @@
-package com.example.notes;
+package com.example.notes.data;
 
-import com.example.notes.data.NotesApi;
-import com.example.notes.data.RemoteRepositoryImpl;
 import com.example.notes.domain.Note;
 
 import org.junit.Before;
@@ -18,7 +16,7 @@ import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(MockitoJUnitRunner.class)
-public class RemoteRepositoryTest {
+public class RemoteRepositoryImplTest {
     private RemoteRepositoryImpl remoteRepository;
     @Mock
     private NotesApi notesApi;

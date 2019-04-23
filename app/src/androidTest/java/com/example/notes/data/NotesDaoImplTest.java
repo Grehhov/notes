@@ -1,12 +1,9 @@
-package com.example.notes;
+package com.example.notes.data;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.example.notes.data.NotesDaoImpl;
-import com.example.notes.data.NotesSqliteHelper;
 import com.example.notes.domain.Note;
 
 import org.junit.After;
@@ -14,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +18,7 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
-public class NotesDaoTest {
+public class NotesDaoImplTest {
     private NotesDaoImpl notesDao;
     private NotesSqliteHelper notesSqliteHelper;
     private Note note;
