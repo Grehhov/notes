@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -25,6 +26,10 @@ public class NotesSqliteHelper extends SQLiteOpenHelper {
     @Inject
     NotesSqliteHelper(@NonNull Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    NotesSqliteHelper(@NonNull Context context, @Nullable String databaseName) {
+        super(context, databaseName, null, DATABASE_VERSION);
     }
 
     @Override
